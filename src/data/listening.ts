@@ -1,0 +1,121 @@
+import type { ListeningTask } from '../types';
+
+export const listeningTasks: ListeningTask[] = [
+  {
+    id: 'horen-1',
+    title: 'Teil 1: Kurze Gespräche',
+    instruction: 'Sie hören kurze Gespräche. Kreuzen Sie die richtige Antwort an.',
+    audioText: 'Entschuldigung, wo ist der Bahnhof? — Der Bahnhof ist da drüben, neben der Post. — Vielen Dank.',
+    questions: [
+      {
+        id: 'h1q1',
+        type: 'multiple-choice',
+        prompt: 'Wo ist der Bahnhof?',
+        options: ['Neben der Post', 'Neben dem Rathaus', 'Am Marktplatz'],
+        correctIndex: 0,
+        explanation: 'Im Dialog heißt es: "Der Bahnhof ist da drüben, neben der Post."',
+      },
+      {
+        id: 'h1q2',
+        type: 'multiple-choice',
+        prompt: 'Wie fragt die Person?',
+        options: ['Wo ist die Apotheke?', 'Wo ist der Bahnhof?', 'Wo ist die Post?'],
+        correctIndex: 1,
+        explanation: 'Die Person fragt: "Entschuldigung, wo ist der Bahnhof?"',
+      },
+    ],
+  },
+  {
+    id: 'horen-2',
+    title: 'Teil 2: Auf dem Markt',
+    instruction: 'Sie hören ein Gespräch auf dem Markt. Beantworten Sie die Fragen.',
+    audioText: 'Guten Tag, was möchten Sie? — Ein Kilo Äpfel, bitte. — Sonst noch etwas? — Ja, noch zwei Tomaten und eine Flasche Wasser. — Das macht vier Euro fünfzig. — Hier sind fünf Euro. — Und fünfzig Cent zurück. — Danke schön.',
+    questions: [
+      {
+        id: 'h2q1',
+        type: 'multiple-choice',
+        prompt: 'Was kauft die Kundin?',
+        options: ['Äpfel, Tomaten und Wasser', 'Brot und Milch', 'Bananas und Saft'],
+        correctIndex: 0,
+        explanation: 'Die Kundin bestellt: "Ein Kilo Äpfel" und "zwei Tomaten und eine Flasche Wasser".',
+      },
+      {
+        id: 'h2q2',
+        type: 'multiple-choice',
+        prompt: 'Wie viel kostet alles?',
+        options: ['Vier Euro', 'Vier Euro fünfzig', 'Fünf Euro'],
+        correctIndex: 1,
+        explanation: 'Im Dialog heißt es: "Das macht vier Euro fünfzig."',
+      },
+      {
+        id: 'h2q3',
+        type: 'multiple-choice',
+        prompt: 'Wie viel bekommt die Kundin zurück?',
+        options: ['Fünfzig Cent', 'Einen Euro', 'Zehn Cent'],
+        correctIndex: 0,
+        explanation: 'Im Dialog heißt es: "Und fünfzig Cent zurück."',
+      },
+    ],
+  },
+  {
+    id: 'horen-3',
+    title: 'Teil 3: Termin vereinbaren',
+    instruction: 'Sie hören ein Telefonat. Richtig oder Falsch?',
+    audioText: 'Hallo, hier ist Petra Klein. Ich möchte einen Termin machen. — Guten Tag, Frau Klein. Wann möchten Sie kommen? — Am Dienstagvormittag, wenn möglich. — Haben Sie am Mittwoch um zehn Uhr Zeit? — Ja, das passt. — Gut, dann bis Mittwoch, zehn Uhr.',
+    questions: [
+      {
+        id: 'h3q1',
+        type: 'true-false',
+        prompt: 'Frau Klein möchte am Dienstag kommen.',
+        correctAnswer: true,
+        explanation: 'Sie sagt: "Am Dienstagvormittag, wenn möglich."',
+      },
+      {
+        id: 'h3q2',
+        type: 'true-false',
+        prompt: 'Der Termin ist am Dienstag um zehn Uhr.',
+        correctAnswer: false,
+        explanation: 'Der Termin wird auf Mittwoch um zehn Uhr verschoben.',
+      },
+      {
+        id: 'h3q3',
+        type: 'true-false',
+        prompt: 'Frau Klein hat am Mittwoch um zehn Uhr Zeit.',
+        correctAnswer: true,
+        explanation: 'Sie sagt: "Ja, das passt."',
+      },
+    ],
+  },
+  {
+    id: 'horen-4',
+    title: 'Teil 4: Im Restaurant',
+    instruction: 'Sie hören ein Gespräch im Restaurant. Kreuzen Sie die richtige Antwort an.',
+    audioText: 'Was möchten Sie trinken? — Ich nehme einen Kaffee und ein Glas Wasser. — Möchten Sie auch etwas essen? — Ja, ich hätte gerne eine Suppe und danach ein Schnitzel. — Sehr gut. Möchten Sie das Schnitzel mit Pommes oder mit Salat? — Mit Pommes, bitte. — Gut, einen Moment bitte.',
+    questions: [
+      {
+        id: 'h4q1',
+        type: 'multiple-choice',
+        prompt: 'Was möchte die Person trinken?',
+        options: ['Kaffee und Wasser', 'Saft und Bier', 'Tee und Cola'],
+        correctIndex: 0,
+        explanation: 'Im Dialog heißt es: "Ich nehme einen Kaffee und ein Glas Wasser."',
+      },
+      {
+        id: 'h4q2',
+        type: 'multiple-choice',
+        prompt: 'Was möchte die Person essen?',
+        options: ['Suppe und Schnitzel', 'Pizza und Salat', 'Nudeln und Fisch'],
+        correctIndex: 0,
+        explanation: 'Im Dialog heißt es: "eine Suppe und danach ein Schnitzel".',
+      },
+      {
+        id: 'h4q3',
+        type: 'multiple-choice',
+        prompt: 'Was bestellt die Person zum Schnitzel?',
+        options: ['Salat', 'Pommes', 'Reis'],
+        correctIndex: 1,
+        explanation: 'Im Dialog heißt es: "Mit Pommes, bitte."',
+      },
+    ],
+  },
+];
