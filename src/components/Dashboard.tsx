@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { BookOpen, Headphones, PenTool, Mic, GraduationCap, Info, Award, FileCheck, Globe } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { BookOpen, Headphones, PenTool, Mic, GraduationCap, Info, Award, FileCheck, Globe, ChevronDown } from 'lucide-react';
 import type { ModuleId, Progress } from '@/types';
 import { ProgressBar } from '@/components/ProgressBar';
 import { cn } from '@/lib/utils';
@@ -15,7 +15,22 @@ interface DashboardProps {
 
 export function Dashboard({ onSelectModule, onOpenInstructions, onOpenExamGuide, onOpenMockExam, progress }: DashboardProps) {
   const [lang, setLang] = useState<Language>('ru');
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const t = translations[lang];
+
+  const currentLang = languages.find((l) => l.id === lang) || languages[0];
+
+  // Закрывать выпадающий список при клике вне его
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <div className="animate-fade-in">
@@ -26,21 +41,43 @@ export function Dashboard({ onSelectModule, onOpenInstructions, onOpenExamGuide,
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
         </div>
 
-        {/* Панель выбора 11 языков с прокруткой */}
-        <div className="absolute top-4 right-4 z-10 flex items-center gap-1 bg-white/15 backdrop-blur-md p-1.5 rounded-xl border border-white/20 max-w-[240px] sm:max-w-none overflow-x-auto">
-          <Globe className="w-4 h-4 text-white ml-1 shrink-0" />
-          {languages.map((l) => (
-            <button
-              key={l.id}
-              onClick={() => setLang(l.id)}
-              className={cn(
-                'px-2 py-1 text-xs font-semibold rounded-lg transition-all shrink-0',
-                lang === l.id ? 'bg-white text-teal-800 shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10'
-              )}
-            >
-              {l.flag} {l.id.toUpperCase()}
-            </button>
-          ))}
+        {/* Выпадающий список языков в правом верхнем углу */}
+        <div className="absolute top-4 right-4 z-20" ref={dropdownRef}>
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-md px-3 py-2 rounded-xl border border-white/30 text-white shadow-sm transition-all text-xs font-semibold"
+          >
+            <Globe className="w-4 h-4 text-white" />
+            <span>{currentLang.flag} {currentLang.label}</span>
+            <ChevronDown className={cn('w-3.5 h-3.5 text-white/80 transition-transform duration-200', isOpen && 'rotate-180')} />
+          </button>
+
+          {isOpen && (
+            <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-30 animate-fade-in max-h-80 overflow-y-auto">
+              <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                Язык интерфейса
+              </div>
+              {languages.map((l) => (
+                <button
+                  key={l.id}
+                  onClick={() => {
+                    setLang(l.id);
+                    setIsOpen(false);
+                  }}
+                  className={cn(
+                    'w-full flex items-center justify-between px-3.5 py-2 text-xs font-medium text-left transition-colors',
+                    lang === l.id ? 'bg-teal-50 text-teal-800 font-semibold' : 'text-slate-700 hover:bg-slate-50'
+                  )}
+                >
+                  <span className="flex items-center gap-2.5">
+                    <span className="text-base">{l.flag}</span>
+                    <span>{l.label}</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 uppercase">{l.id}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="relative flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6 text-center sm:text-left pt-12 sm:pt-0">
