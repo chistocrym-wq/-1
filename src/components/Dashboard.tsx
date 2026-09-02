@@ -24,16 +24,6 @@ interface ModuleCard {
 
 const modules: ModuleCard[] = [
   {
-    id: 'lesen',
-    title: 'Lesen',
-    subtitle: 'Чтение',
-    description: 'Тексты, письма, объявления — понимание прочитанного',
-    icon: BookOpen,
-    color: 'text-teal-700',
-    bgColor: 'bg-teal-50',
-    borderColor: 'border-teal-200',
-  },
-  {
     id: 'horen',
     title: 'Hören',
     subtitle: 'Аудирование',
@@ -63,20 +53,46 @@ const modules: ModuleCard[] = [
     bgColor: 'bg-rose-50',
     borderColor: 'border-rose-200',
   },
+  {
+    id: 'lesen',
+    title: 'Lesen',
+    subtitle: 'Чтение',
+    description: 'Тексты, письма, объявления — понимание прочитанного',
+    icon: BookOpen,
+    color: 'text-teal-700',
+    bgColor: 'bg-teal-50',
+    borderColor: 'border-teal-200',
+  },
 ];
 
 export function Dashboard({ onSelectModule, onOpenInstructions, onOpenExamGuide, onOpenMockExam, progress }: DashboardProps) {
   return (
     <div className="animate-fade-in">
       {/* Hero section */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-600 via-teal-700 to-cyan-800 px-6 py-12 sm:px-12 sm:py-16 mb-8 shadow-xl">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-600 via-teal-700 to-cyan-800 px-4 py-6 sm:px-12 sm:py-16 mb-8 shadow-xl">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
         </div>
-        <div className="relative flex items-start justify-between gap-6">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-4">
+
+        <div className="relative flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6 text-center sm:text-left">
+          
+          {/* Увеличенная картинка Отто без обрезания (object-contain) */}
+          <div className="flex flex-col items-center shrink-0 order-1 sm:order-2">
+            <img
+              src="/otto.png" 
+              alt="Отто — помощник для изучения немецкого"
+              className="h-44 w-44 sm:h-48 sm:w-48 rounded-2xl object-contain object-center drop-shadow-2xl"
+            />
+            <div className="mt-2.5 text-center">
+              <p className="text-white/90 text-sm font-semibold">Ваш помощник</p>
+              <p className="text-white/75 text-xs">Подготовимся к экзамену вместе</p>
+            </div>
+          </div>
+
+          {/* Текстовая часть */}
+          <div className="flex-1 min-w-0 order-2 sm:order-1">
+            <div className="flex items-center justify-center sm:justify-start gap-3 mb-4">
               <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm">
                 <GraduationCap className="w-7 h-7 text-white" />
               </div>
@@ -85,19 +101,12 @@ export function Dashboard({ onSelectModule, onOpenInstructions, onOpenExamGuide,
             <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3 tracking-tight">
               Тренажёр Отто
             </h1>
-            <p className="text-white/80 text-lg max-w-2xl mb-6">
+            <p className="text-white/80 text-sm sm:text-lg max-w-2xl mb-6 leading-relaxed">
               Четыре модуля для комплексной подготовки: чтение, аудирование, письмо и говорение.
               Тренируйтесь в своём темпе, сразу исправляйте ошибки и отслеживайте прогресс.
             </p>
           </div>
-          <div className="flex flex-col items-center shrink-0">
-            <img
-              src="/photo_5228950309122547432_c.jpg"
-              alt="Отто — помощник для изучения немецкого"
-              className="h-28 w-28 sm:h-36 sm:w-36 rounded-2xl object-cover object-top shadow-xl ring-4 ring-white/30"
-            />
-            <p className="text-white/90 text-sm font-semibold mt-2.5 text-center">Ваш помощник</p>
-          </div>
+
         </div>
       </div>
 
