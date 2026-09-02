@@ -158,13 +158,13 @@ export function Dashboard({ onSelectModule, onOpenInstructions, onOpenExamGuide,
         </button>
       </div>
 
-      {/* Module cards */}
+      {/* Module cards (Schreiben, Sprechen, Lesen, Hören) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         {[
-          { id: 'horen' as ModuleId, title: t.horenTitle, subtitle: t.horenSub, desc: t.horenDesc, icon: Headphones, color: 'text-sky-700', bg: 'bg-sky-50', border: 'border-sky-200' },
           { id: 'schreiben' as ModuleId, title: t.schreibenTitle, subtitle: t.schreibenSub, desc: t.schreibenDesc, icon: PenTool, color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200' },
           { id: 'sprechen' as ModuleId, title: t.sprechenTitle, subtitle: t.sprechenSub, desc: t.sprechenDesc, icon: Mic, color: 'text-rose-700', bg: 'bg-rose-50', border: 'border-rose-200' },
           { id: 'lesen' as ModuleId, title: t.lesenTitle, subtitle: t.lesenSub, desc: t.lesenDesc, icon: BookOpen, color: 'text-teal-700', bg: 'bg-teal-50', border: 'border-teal-200' },
+          { id: 'horen' as ModuleId, title: t.horenTitle, subtitle: t.horenSub, desc: t.horenDesc, icon: Headphones, color: 'text-sky-700', bg: 'bg-sky-50', border: 'border-sky-200' },
         ].map((mod, idx) => {
           const p = progress[mod.id];
           const Icon = mod.icon;
