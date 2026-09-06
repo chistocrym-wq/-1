@@ -339,10 +339,10 @@ export function ListeningModule({ onBack, onComplete }: ListeningModuleProps) {
                 disabled={answerState !== 'unanswered'}
                 onClick={() => handleAnswer(index)}
                 className={cn(
-                  'flex w-full items-center gap-3 rounded-xl border-2 px-4 py-4 text-left font-medium transition-all',
+                  'flex w-full items-center gap-3 rounded-xl border-2 px-4 py-4 text-left font-medium !text-slate-800 transition-all',
 
                   answerState === 'unanswered' &&
-                    'border-slate-200 bg-white hover:border-sky-400 hover:bg-sky-50',
+                    'border-slate-200 bg-white !text-slate-800 hover:border-sky-400 hover:bg-sky-50',
 
                   correct &&
                     'border-emerald-400 bg-emerald-50 text-emerald-800',
@@ -379,7 +379,7 @@ export function ListeningModule({ onBack, onComplete }: ListeningModuleProps) {
                   )}
                 </span>
 
-                <span>{option}</span>
+                <span className="!text-slate-800">{option}</span>
               </button>
             );
           })}
@@ -390,10 +390,10 @@ export function ListeningModule({ onBack, onComplete }: ListeningModuleProps) {
             disabled={answerState !== 'unanswered'}
             onClick={() => handleAnswer(true)}
             className={cn(
-              'rounded-xl border-2 px-4 py-4 font-semibold transition-all',
+              'rounded-xl border-2 px-4 py-4 font-semibold !text-slate-800 transition-all',
 
               answerState === 'unanswered' &&
-                'border-slate-200 bg-white hover:border-sky-400 hover:bg-sky-50',
+                'border-slate-200 bg-white !text-slate-800 hover:border-sky-400 hover:bg-sky-50',
 
               isTrueFalseCorrect(true) &&
                 'border-emerald-400 bg-emerald-50 text-emerald-800',
@@ -422,10 +422,10 @@ export function ListeningModule({ onBack, onComplete }: ListeningModuleProps) {
             disabled={answerState !== 'unanswered'}
             onClick={() => handleAnswer(false)}
             className={cn(
-              'rounded-xl border-2 px-4 py-4 font-semibold transition-all',
+              'rounded-xl border-2 px-4 py-4 font-semibold !text-slate-800 transition-all',
 
               answerState === 'unanswered' &&
-                'border-slate-200 bg-white hover:border-sky-400 hover:bg-sky-50',
+                'border-slate-200 bg-white !text-slate-800 hover:border-sky-400 hover:bg-sky-50',
 
               isTrueFalseCorrect(false) &&
                 'border-emerald-400 bg-emerald-50 text-emerald-800',
