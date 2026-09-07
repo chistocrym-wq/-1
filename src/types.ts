@@ -40,11 +40,31 @@ export type Question =
   | MatchingQuestion
   | FillBlankQuestion;
 
+export type ReadingVisualType =
+  | 'sms'
+  | 'email'
+  | 'note'
+  | 'fridge-note'
+  | 'postcard'
+  | 'letter';
+
+export interface ReadingVisual {
+  sender?: string;
+  recipient?: string;
+  subject?: string;
+  date?: string;
+  title?: string;
+  message?: string;
+  body?: string;
+  signature?: string;
+}
+
 export interface ReadingTask {
   id: string;
   title: string;
   instruction: string;
-  text: string;
+  visualType: ReadingVisualType;
+  visual: ReadingVisual;
   questions: (MultipleChoiceQuestion | TrueFalseQuestion)[];
 }
 
@@ -89,3 +109,4 @@ export interface ModuleProgress {
 export interface Progress {
   [key: string]: ModuleProgress;
 }
+
