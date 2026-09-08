@@ -18,7 +18,10 @@ export default function App() {
   const [lesenScreen, setLesenScreen] = useState<'home' | 'teil1'>('home');
   const { progress, recordScore, markCompleted } = useProgress();
 
-  const handleBack = useCallback(() => setView(null), []);
+  const handleBack = useCallback(() => {
+  setLesenScreen('home');
+  setView(null);
+}, []);
 
   useEffect(() => {
     const telegram = window.Telegram?.WebApp;

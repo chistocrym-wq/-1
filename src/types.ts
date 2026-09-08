@@ -13,11 +13,13 @@ export interface MultipleChoiceQuestion extends BaseQuestion {
   type: 'multiple-choice';
   options: string[];
   correctIndex: number;
+  promptRu?: string;
 }
 
 export interface TrueFalseQuestion extends BaseQuestion {
   type: 'true-false';
   correctAnswer: boolean;
+  promptRu?: string;
 }
 
 export interface MatchingQuestion extends BaseQuestion {
@@ -63,6 +65,7 @@ export interface ReadingTask {
   id: string;
   title: string;
   instruction: string;
+  instructionRu?: string;
   visualType: ReadingVisualType;
   visual: ReadingVisual;
   questions: (MultipleChoiceQuestion | TrueFalseQuestion)[];

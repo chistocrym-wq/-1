@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, ArrowRight, CheckCircle2, Trophy } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, Languages } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 import type { ReadingTask } from '@/types';
@@ -28,11 +28,14 @@ export function Teil1Runner({
   const [currentTaskIndex, setCurrentTaskIndex] = useState(startTask);
 
   const [answered, setAnswered] = useState<Record<string, boolean>>({});
-  const [correctAnswers, setCorrectAnswers] = useState<
-    Record<string, boolean>
-  >({});
+  const [correctAnswers, setCorrectAnswers] =
+    useState<Record<string, boolean>>({});
 
-  const [finished, setFinished] = useState(false);
+  const [showInstructionTranslation, setShowInstructionTranslation] =
+    useState(false);
+
+  const [showQuestionTranslations, setShowQuestionTranslations] =
+    useState<Record<string, boolean>>({});
 
   const task = tasks[currentTaskIndex];
 
@@ -40,26 +43,18 @@ export function Teil1Runner({
     return null;
   }
 
-  /*
-   * Проверяем, на все ли вопросы внутри текущего задания
-   * пользователь уже ответил.
-   */
   const taskComplete = task.questions.every(
     (question) => answered[question.id]
   );
 
-  /*
-   * Задание считается успешным только тогда,
-   * когда ВСЕ вопросы внутри него отвечены правильно.
-   */
   const taskSuccessful = task.questions.every(
     (question) => correctAnswers[question.id] === true
   );
 
-  /*
-   * Получаем результат каждого вопроса.
-   */
-  const handleAnswer = (questionId: string, correct: boolean) => {
+  const handleAnswer = (
+    questionId: string,
+    correct: boolean
+  ) => {
     setAnswered((previous) => ({
       ...previous,
       [questionId]: true,
@@ -71,172 +66,115 @@ export function Teil1Runner({
     }));
   };
 
-  /*
-   * Переход к следующему заданию.
-   */
+  const toggleQuestionTranslation = (questionId: string) => {
+    setShowQuestionTranslations((previous) => ({
+      ...previous,
+      [questionId]: !previous[questionId],
+    }));
+  };
+
   const handleNext = () => {
     if (!taskComplete) {
       return;
     }
 
-    /*
-     * Сохраняем завершённое задание.
-     */
     record(currentTaskIndex, taskSuccessful);
 
-    /*
-     * Если есть ещё задания — открываем следующее.
-     */
     if (currentTaskIndex < tasks.length - 1) {
       setCurrentTaskIndex((previous) => previous + 1);
       setAnswered({});
       setCorrectAnswers({});
+      setShowInstructionTranslation(false);
+      setShowQuestionTranslations({});
       return;
     }
 
-    /*
-     * Если это было последнее задание.
-     */
     onComplete(
       progress.dailySuccessful + (taskSuccessful ? 1 : 0),
       progress.dailyCompleted + 1
     );
-
-    setFinished(true);
   };
-
-  /*
-   * Экран после окончания всех заданий.
-   */
-  if (finished) {
-    return (
-      <div className="animate-scale-in flex flex-col items-center justify-center py-12">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-teal-50 mb-6">
-          <Trophy className="h-10 w-10 text-teal-700" />
-        </div>
-
-        <h2 className="text-2xl font-bold text-slate-900 mb-2">
-          Teil 1 завершён!
-        </h2>
-
-        <p className="text-slate-500 mb-8 text-center max-w-md">
-          Ты прошла все тестовые задания Teil 1.
-        </p>
-
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-900 text-white font-medium hover:bg-slate-800 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Вернуться к Lesen
-        </button>
-      </div>
-    );
-  }
 
   return (
     <div className="animate-fade-in">
       {/* Верхняя панель */}
-      <div className="flex items-center gap-3 mb-6">
+      <div className="mb-6 flex items-center gap-3">
         <button
           onClick={onBack}
-          className="flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 transition-colors shrink-0"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white transition-colors hover:bg-slate-50"
           aria-label="Назад"
         >
-          <ArrowLeft className="w-5 h-5 text-slate-600" />
+          <ArrowLeft className="h-5 w-5 text-slate-600" />
         </button>
 
-        <div className="flex-1 min-w-0">
+        <div>
           <p className="text-sm text-slate-500">
             Lesen · Teil 1
           </p>
 
-          <h2 className="text-xl font-bold text-slate-900">
+          <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">
             Aufgabe {currentTaskIndex + 1} / {tasks.length}
           </h2>
         </div>
       </div>
 
-      {/* Статистика */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
-        <div className="rounded-2xl border border-slate-200 bg-white p-3">
-          <div className="text-xs text-slate-400">
-            Сегодня
-          </div>
-
-          <div className="text-lg font-bold text-slate-900">
-            {progress.dailyCompleted}
-          </div>
-
-          <div className="text-xs text-slate-500">
-            выполнено
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-3">
-          <div className="text-xs text-slate-400">
-            Сегодня
-          </div>
-
-          <div className="text-lg font-bold text-teal-700">
-            {progress.dailySuccessful}
-          </div>
-
-          <div className="text-xs text-slate-500">
-            успешно
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-3">
-          <div className="flex items-center justify-between text-xs text-slate-500">
-            <span>Прогресс</span>
-
-            <span>
-              {progress.lastCompleted} / {tasks.length}
-            </span>
-          </div>
-
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
-            <div
-              className="h-full rounded-full bg-teal-600 transition-all duration-300"
-              style={{
-                width: `${Math.min(
-                  (progress.lastCompleted / tasks.length) * 100,
-                  100
-                )}%`,
-              }}
-            />
-          </div>
-        </div>
-      </div>
-
       {/* Инструкция */}
-      <div className="rounded-xl border border-teal-200 bg-teal-50 p-4 mb-6">
+      <div className="mb-6 rounded-2xl border border-teal-200 bg-teal-50 p-4 sm:p-5">
         <div className="flex items-start gap-3">
-          <CheckCircle2 className="w-5 h-5 text-teal-700 shrink-0 mt-0.5" />
+          <CheckCircle2 className="mt-1 h-5 w-5 shrink-0 text-teal-700" />
 
-          <div>
-            <h3 className="font-semibold text-teal-800 mb-1">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-[18px] font-semibold leading-7 text-teal-900 sm:text-[19px]">
               {task.title}
             </h3>
 
-            <p className="text-sm text-slate-600">
+            <p className="mt-1 text-[18px] leading-8 text-slate-700">
               {task.instruction}
             </p>
+
+            {task.instructionRu && showInstructionTranslation && (
+              <div className="mt-4 rounded-xl border border-slate-200 bg-white px-4 py-4">
+                <div className="mb-1 text-sm font-semibold text-slate-500">
+                  Перевод
+                </div>
+
+                <p className="text-[17px] leading-7 text-slate-700">
+                  {task.instructionRu}
+                </p>
+              </div>
+            )}
+
+            {task.instructionRu && (
+              <button
+                type="button"
+                onClick={() =>
+                  setShowInstructionTranslation(
+                    (previous) => !previous
+                  )
+                }
+                className="mt-4 inline-flex min-h-[46px] items-center gap-2 rounded-xl border border-teal-200 bg-white px-4 py-2 text-[16px] font-semibold text-teal-700 transition-colors hover:bg-teal-50"
+              >
+                <Languages className="h-4 w-4" />
+
+                {showInstructionTranslation
+                  ? 'Скрыть перевод'
+                  : 'Перевод задания'}
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Само задание */}
-      <div className="space-y-5 mb-6">
-        {/* Визуальный источник */}
+      {/* Визуальный источник */}
+      <div className="mb-7">
         <ReadingVisual task={task} />
+      </div>
 
-        {/* Все вопросы этого задания */}
-        <div className="space-y-4">
-          {task.questions.map((question, index) => (
+      {/* Вопросы */}
+      <div className="space-y-5">
+        {task.questions.map((question, index) => (
+          <div key={question.id}>
             <QuestionCard
-              key={question.id}
               question={question}
               index={index}
               onAnswer={(correct) =>
@@ -244,30 +182,60 @@ export function Teil1Runner({
               }
               showResult={true}
             />
-          ))}
-        </div>
+
+            {question.promptRu && (
+              <div className="mt-2 px-1">
+                <button
+                  type="button"
+                  onClick={() =>
+                    toggleQuestionTranslation(question.id)
+                  }
+                  className="inline-flex min-h-[42px] items-center gap-2 rounded-lg px-2 py-1 text-[15px] font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-teal-700"
+                >
+                  <Languages className="h-4 w-4" />
+
+                  {showQuestionTranslations[question.id]
+                    ? 'Скрыть перевод'
+                    : 'Перевод вопроса'}
+                </button>
+
+                {showQuestionTranslations[question.id] && (
+                  <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                    <div className="mb-1 text-sm font-semibold text-slate-500">
+                      Перевод
+                    </div>
+
+                    <p className="text-[17px] leading-7 text-slate-700">
+                      {question.promptRu}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
 
       {/* Следующее задание */}
-      <div className="flex justify-end">
+      <div className="mt-7 flex justify-end">
         <button
           onClick={handleNext}
           disabled={!taskComplete}
           className={cn(
-            'flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all',
+            'flex min-h-[54px] items-center gap-2 rounded-xl px-6 py-3 text-[17px] font-semibold transition-all',
             taskComplete
               ? 'bg-teal-600 text-white hover:bg-teal-700'
-              : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+              : 'cursor-not-allowed bg-slate-100 text-slate-400'
           )}
         >
           {currentTaskIndex < tasks.length - 1 ? (
             <>
               Следующее задание
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="h-5 w-5" />
             </>
           ) : (
             <>
-              <CheckCircle2 className="w-4 h-4" />
+              <CheckCircle2 className="h-5 w-5" />
               Завершить
             </>
           )}
