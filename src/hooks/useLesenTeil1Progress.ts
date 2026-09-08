@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-const STORAGE_KEY = 'otto-lesen-teil1-progress-v1';
+const STORAGE_KEY = 'otto-lesen-teil1-progress-v2';
 
 interface LesenTeil1Progress {
   lastCompleted: number;
