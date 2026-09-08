@@ -112,4 +112,37 @@ export interface ModuleProgress {
 export interface Progress {
   [key: string]: ModuleProgress;
 }
+export type LesenTeil2VisualType =
+  | 'shop'
+  | 'cinema'
+  | 'school'
+  | 'travel'
+  | 'website'
+  | 'housing'
+  | 'doctor'
+  | 'leisure'
+  | 'restaurant'
+  | 'classified'
+  | 'parking'
+  | 'service'
+  | 'transport'
+  | 'course'
+  | 'job'
+  | 'hotel';
 
+export interface LesenTeil2Option {
+  type: LesenTeil2VisualType;
+  title: string;
+  text: string;
+}
+
+export interface ReadingTeil2Task {
+  id: string;
+  title: string;
+  situation: string;
+  options: {
+    a: LesenTeil2Option;
+    b: LesenTeil2Option;
+  };
+  correctAnswer: 'a' | 'b';
+}

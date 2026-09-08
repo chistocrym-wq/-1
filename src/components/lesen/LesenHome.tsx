@@ -3,15 +3,22 @@ import { useLesenTeil1Progress } from '@/hooks/useLesenTeil1Progress';
 import { lesenTeil1Tasks } from '@/data/lesen/teil1';
 import { BookOpen, ChevronDown, ChevronUp, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLesenTeil2Progress } from '@/hooks/useLesenTeil2Progress';
 
 interface LesenHomeProps {
   onStartTeil1: () => void;
+  onStartTeil2: () => void;
 }
 
-export function LesenHome({ onStartTeil1 }: LesenHomeProps) {
+export function LesenHome({
+  onStartTeil1,
+  onStartTeil2,
+}: LesenHomeProps) {
   const [showRussian, setShowRussian] = useState(false);
 
   const { progress } = useLesenTeil1Progress();
+
+  const { progress: teil2Progress } = useLesenTeil2Progress(); 
 
   const teil1Total = lesenTeil1Tasks.length;
 
@@ -94,17 +101,17 @@ export function LesenHome({ onStartTeil1 }: LesenHomeProps) {
   onStart={onStartTeil1}
 />
 
-      {/* Teil 2 */}
-      <TeilCard
-        number="2"
-        title="Informationen finden"
-        description="Finden Sie die passende Information."
-        total={50}
-        dailyCompleted={0}
-        dailySuccessful={0}
-        progress={0}
-        active={false}
-      />
+<TeilCard
+  number="2"
+  title="Informationen finden"
+  description="Finden Sie die passende Information."
+  total={50}
+  progress={0}
+  dailyCompleted={0}
+  dailySuccessful={0}
+  active={true}
+  onStart={onStartTeil2}
+/>     
 
       {/* Teil 3 */}
       <TeilCard

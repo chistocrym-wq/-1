@@ -10,12 +10,16 @@ import { SpeakingModule } from '@/components/modules/SpeakingModule';
 import { useProgress } from '@/hooks/useProgress';
 import { LesenHome } from '@/components/lesen/LesenHome';
 import type { ModuleId } from '@/types';
+import { Teil2Runner } from '@/components/lesen/Teil2Runner';
+import { lesenTeil2Tasks } from '@/data/lesen/teil2';
 
 type View = ModuleId | 'instructions' | 'exam-guide' | 'mock-exam' | null;
 
 export default function App() {
   const [view, setView] = useState<View>(null);
-  const [lesenScreen, setLesenScreen] = useState<'home' | 'teil1'>('home');
+  const [lesenScreen, setLesenScreen] = useState<
+  'home' | 'teil1' | 'teil2'
+>('home');
   const { progress, recordScore, markCompleted } = useProgress();
 
   const handleBack = useCallback(() => {
@@ -72,11 +76,20 @@ export default function App() {
         {view === 'lesen' && lesenScreen === 'home' && (
   <LesenHome
     onStartTeil1={() => setLesenScreen('teil1')}
+    onStartTeil2={() => setLesenScreen('teil2')}
   />
 )}
 
 {view === 'lesen' && lesenScreen === 'teil1' && (
   <ReadingModule
+    onBack={() => setLesenScreen('home')}
+    onComplete={handleComplete('lesen')}
+  />
+)}
+
+{view === 'lesen' && lesenScreen === 'teil2' && (
+  <Teil2Runner
+    tasks={lesenTeil2Tasks}
     onBack={() => setLesenScreen('home')}
     onComplete={handleComplete('lesen')}
   />
