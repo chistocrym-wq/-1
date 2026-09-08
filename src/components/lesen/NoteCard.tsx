@@ -6,24 +6,22 @@ interface NoteCardProps {
 
 export function NoteCard({ visual }: NoteCardProps) {
   return (
-    <div className="mx-auto w-full max-w-lg">
-      <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-5 shadow-sm">
-        {visual.title && (
-          <div className="mb-4 text-base font-semibold text-slate-800">
-            {visual.title}
-          </div>
-        )}
+    <div className="mx-auto w-full max-w-2xl border border-slate-300 bg-white px-5 py-6 sm:px-7 sm:py-7">
+      {visual.title && (
+        <div className="mb-5 text-[18px] font-semibold text-slate-900 sm:text-[19px]">
+          {visual.title}
+        </div>
+      )}
 
-        <p className="whitespace-pre-line text-[16px] leading-7 text-slate-800">
-          {visual.message}
-        </p>
+      <p className="whitespace-pre-line text-[18px] leading-8 text-slate-900 sm:text-[19px]">
+        {visual.message}
+      </p>
 
-        {visual.signature && (
-          <div className="mt-5 text-sm text-slate-600">
-            {visual.signature}
-          </div>
-        )}
-      </div>
+      {visual.signature && (
+        <div className="mt-6 text-[16px] text-slate-700 sm:text-[17px]">
+          {visual.signature}
+        </div>
+      )}
     </div>
   );
 }

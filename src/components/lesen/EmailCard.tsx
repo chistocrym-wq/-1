@@ -6,22 +6,24 @@ interface EmailCardProps {
 
 export function EmailCard({ visual }: EmailCardProps) {
   return (
-    <div className="mx-auto w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-200 bg-slate-50 px-5 py-4">
-        <div className="text-sm font-semibold text-slate-800">
-          ✉ E-Mail
+    <div className="mx-auto w-full max-w-2xl border border-slate-300 bg-white">
+      <div className="border-b border-slate-300 px-5 py-5 sm:px-7">
+        <div className="mb-4 text-[17px] font-semibold text-slate-800">
+          E-Mail
         </div>
 
-        <div className="mt-3 space-y-1 text-sm text-slate-600">
+        <div className="space-y-1 text-[16px] leading-6 text-slate-700 sm:text-[17px]">
           {visual.sender && (
             <div>
-              <span className="font-semibold">Von:</span> {visual.sender}
+              <span className="font-semibold">Von:</span>{' '}
+              {visual.sender}
             </div>
           )}
 
           {visual.recipient && (
             <div>
-              <span className="font-semibold">An:</span> {visual.recipient}
+              <span className="font-semibold">An:</span>{' '}
+              {visual.recipient}
             </div>
           )}
 
@@ -33,15 +35,15 @@ export function EmailCard({ visual }: EmailCardProps) {
           )}
 
           {visual.date && (
-            <div className="text-xs text-slate-400">
+            <div className="pt-1 text-[14px] text-slate-500">
               {visual.date}
             </div>
           )}
         </div>
       </div>
 
-      <div className="px-5 py-5">
-        <p className="whitespace-pre-line text-[15px] leading-6 text-slate-800">
+      <div className="px-5 py-6 sm:px-7 sm:py-7">
+        <p className="whitespace-pre-line text-[18px] leading-8 text-slate-900 sm:text-[19px]">
           {visual.body}
         </p>
       </div>

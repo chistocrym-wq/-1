@@ -19,6 +19,79 @@
     overscroll-behavior-y: none;
     -webkit-tap-highlight-color: transparent;
   }
+  /* ===== Otto: удобная типографика для телефона ===== */
+
+@layer base {
+  body {
+    font-size: 17px;
+    line-height: 1.55;
+  }
+
+  p,
+  li,
+  label,
+  textarea,
+  input {
+    font-size: 17px;
+    line-height: 1.55;
+  }
+
+  button {
+    font-size: 17px;
+    line-height: 1.4;
+    min-height: 48px;
+  }
+}
+
+/* Текст заданий и вопросов */
+.otto-question-text,
+.otto-reading-text,
+.otto-exercise-text {
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+/* Ответы и основные кнопки */
+.otto-answer-button,
+.otto-primary-button {
+  min-height: 52px;
+  font-size: 17px;
+  line-height: 1.4;
+}
+
+/* На телефоне делаем текст ещё немного крупнее */
+@media (max-width: 640px) {
+  body {
+    font-size: 18px;
+  }
+
+  p,
+  li,
+  label,
+  textarea,
+  input {
+    font-size: 18px;
+    line-height: 1.6;
+  }
+
+  button {
+    min-height: 52px;
+    font-size: 17px;
+  }
+
+  .otto-question-text,
+  .otto-reading-text,
+  .otto-exercise-text {
+    font-size: 19px;
+    line-height: 1.65;
+  }
+
+  .otto-answer-button,
+  .otto-primary-button {
+    min-height: 54px;
+    font-size: 17px;
+  }
+}
 
   button,
   textarea {
