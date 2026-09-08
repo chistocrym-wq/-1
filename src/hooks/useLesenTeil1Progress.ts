@@ -13,26 +13,30 @@ const getToday = () => {
   return new Date().toISOString().slice(0, 10);
 };
 
+const createEmptyProgress = (): LesenTeil1Progress => {
+  return {
+    lastCompleted: 0,
+    dailyDate: getToday(),
+    dailyCompleted: 0,
+    dailySuccessful: 0,
+  };
+};
+
 const getInitialProgress = (): LesenTeil1Progress => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
 
     if (!saved) {
-      return {
-        lastCompleted: 0,
-        dailyDate: getToday(),
-        dailyCompleted: 0,
-        dailySuccessful: 0,
-      };
+      return createEmptyProgress();
     }
 
     const parsed = JSON.parse(saved) as LesenTeil1Progress;
     const today = getToday();
 
     /*
-     * Если наступил новый день,
-     * общий прогресс сохраняем,
-     * а сегодняшние счётчики обнуляем.
+     * Новый день:
+     * номер следующего задания сохраняем,
+     * дневные показатели обнуляем.
      */
     if (parsed.dailyDate !== today) {
       return {
@@ -43,25 +47,21 @@ const getInitialProgress = (): LesenTeil1Progress => {
       };
     }
 
-    return parsed;
-  } catch {
     return {
-      lastCompleted: 0,
-      dailyDate: getToday(),
-      dailyCompleted: 0,
-      dailySuccessful: 0,
+      lastCompleted: parsed.lastCompleted || 0,
+      dailyDate: parsed.dailyDate || today,
+      dailyCompleted: parsed.dailyCompleted || 0,
+      dailySuccessful: parsed.dailySuccessful || 0,
     };
+  } catch {
+    return createEmptyProgress();
   }
 };
 
 export function useLesenTeil1Progress() {
-  const [progress, setProgress] = useState<LesenTeil1Progress>(
-    getInitialProgress
-  );
+  const [progress, setProgress] =
+    useState<LesenTeil1Progress>(getInitialProgress);
 
-  /*
-   * Сохраняем прогресс в браузере.
-   */
   useEffect(() => {
     try {
       localStorage.setItem(
@@ -69,13 +69,16 @@ export function useLesenTeil1Progress() {
         JSON.stringify(progress)
       );
     } catch {
-      // Если браузер не позволяет использовать localStorage,
-      // приложение всё равно продолжит работать.
+      // localStorage недоступен — приложение всё равно работает.
     }
   }, [progress]);
 
   /*
-   * Записываем завершённое задание.
+   * Сохраняем выполненное задание.
+   *
+   * taskIndex = 0 → выполнено задание 1
+   * taskIndex = 19 → выполнено задание 20
+   * taskIndex = 49 → выполнено задание 50
    */
   const record = (
     taskIndex: number,
@@ -84,9 +87,6 @@ export function useLesenTeil1Progress() {
     setProgress((previous) => {
       const today = getToday();
 
-      /*
-       * Защита на случай, если дата изменилась прямо во время работы.
-       */
       const newDay =
         previous.dailyDate !== today;
 
@@ -108,8 +108,23 @@ export function useLesenTeil1Progress() {
     });
   };
 
+  /*
+   * Полностью законченный круг можно начать заново.
+   *
+   * Важно:
+   * дневная статистика НЕ стирается.
+   * Стирается только позиция в последовательности.
+   */
+  const restart = () => {
+    setProgress((previous) => ({
+      ...previous,
+      lastCompleted: 0,
+    }));
+  };
+
   return {
     progress,
     record,
+    restart,
   };
 }

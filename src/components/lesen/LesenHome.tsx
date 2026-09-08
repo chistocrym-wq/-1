@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useLesenTeil1Progress } from '@/hooks/useLesenTeil1Progress';
+import { lesenTeil1Tasks } from '@/data/lesen/teil1';
 import { BookOpen, ChevronDown, ChevronUp, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -8,6 +10,15 @@ interface LesenHomeProps {
 
 export function LesenHome({ onStartTeil1 }: LesenHomeProps) {
   const [showRussian, setShowRussian] = useState(false);
+
+  const { progress } = useLesenTeil1Progress();
+
+  const teil1Total = lesenTeil1Tasks.length;
+
+  const teil1Progress = Math.min(
+    progress.lastCompleted,
+    teil1Total
+  );
 
   return (
     <div className="animate-fade-in">
@@ -69,18 +80,19 @@ export function LesenHome({ onStartTeil1 }: LesenHomeProps) {
         )}
       </div>
 
-      {/* Teil 1 */}
-      <TeilCard
-        number="1"
-        title="Kurze Texte"
-        description="Lesen Sie kurze Texte und beantworten Sie Fragen."
-        total={50}
-        dailyCompleted={0}
-        dailySuccessful={0}
-        progress={0}
-        active
-        onStart={onStartTeil1}
-      />
+     {/* Teil 1 */}
+
+<TeilCard
+  number="1"
+  title="Kurze Texte"
+  description="Lesen Sie kurze Texte und beantworten Sie Fragen."
+  total={50}
+  dailyCompleted={0}
+  dailySuccessful={0}
+  progress={0}
+  active
+  onStart={onStartTeil1}
+/>
 
       {/* Teil 2 */}
       <TeilCard
