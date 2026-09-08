@@ -8,12 +8,14 @@ import { ListeningModule } from '@/components/modules/ListeningModule';
 import { WritingModule } from '@/components/modules/WritingModule';
 import { SpeakingModule } from '@/components/modules/SpeakingModule';
 import { useProgress } from '@/hooks/useProgress';
+import { LesenHome } from '@/components/lesen/LesenHome';
 import type { ModuleId } from '@/types';
 
 type View = ModuleId | 'instructions' | 'exam-guide' | 'mock-exam' | null;
 
 export default function App() {
   const [view, setView] = useState<View>(null);
+  const [lesenScreen, setLesenScreen] = useState<'home' | 'teil1'>('home');
   const { progress, recordScore, markCompleted } = useProgress();
 
   const handleBack = useCallback(() => setView(null), []);
@@ -64,9 +66,18 @@ export default function App() {
         {view === 'instructions' && <Instructions onBack={handleBack} />}
         {view === 'exam-guide' && <ExamGuide onBack={handleBack} />}
         {view === 'mock-exam' && <MockExam onBack={handleBack} />}
-        {view === 'lesen' && (
-          <ReadingModule onBack={handleBack} onComplete={handleComplete('lesen')} />
-        )}
+        {view === 'lesen' && lesenScreen === 'home' && (
+  <LesenHome
+    onStartTeil1={() => setLesenScreen('teil1')}
+  />
+)}
+
+{view === 'lesen' && lesenScreen === 'teil1' && (
+  <ReadingModule
+    onBack={() => setLesenScreen('home')}
+    onComplete={handleComplete('lesen')}
+  />
+)}
         {view === 'horen' && (
           <ListeningModule onBack={handleBack} onComplete={handleComplete('horen')} />
         )}
