@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, CheckCircle2, Eye, FileUp, PenLine, RotateCcw, Send, Trophy } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Eye, FileUp, Loader2, PenLine, RotateCcw, Send, Trophy, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { SchreibenTeil2Task } from '@/types';
 import { useSchreibenProgress } from '@/hooks/useSchreibenProgress';
@@ -7,6 +7,20 @@ import { schreibenTeil2SituationRu } from '@/data/schreiben/teil2SituationRu';
 import { GermanWordTooltip } from './GermanWordTooltip';
 
 interface Props { tasks: SchreibenTeil2Task[]; onBack: () => void; }
+
+interface Criterion { score: number; max: number; comment: string; }
+interface CheckResult {
+  transcription?: string;
+  normalizedText: string;
+  score: number;
+  passed: boolean;
+  wordCount: number;
+  criteria: Record<string, Criterion>;
+  points: { point: string; covered: boolean; evidence: string }[];
+  corrections: { original: string; corrected: string; explanation: string }[];
+  strengths: string[];
+  feedback: string;
+}
 
 const POINT_RU: Record<string, string> = {
   'Warum?':'Почему?', 'Warum schreiben Sie?':'Почему вы пишете?', 'An welchen Tagen?':'В какие дни?', 'Preis.':'Цена.', 'Preis?':'Цена?',
@@ -35,7 +49,8 @@ const POINT_RU: Record<string, string> = {
   'Zusammen essen.':'Поужинать вместе.', 'Anmeldung.':'Регистрация.', 'Wann können Sie kommen?':'Когда вы можете прийти?',
   'Wie viel kostet ein Haarschnitt?':'Сколько стоит стрижка?', 'Wann haben Sie Zeit?':'Когда у вас есть время?',
   'Entschuldigen Sie sich.':'Извинитесь.', 'Laden Sie ihn zum Kaffee ein.':'Пригласите его на кофе.',
-  'Informieren Sie über die Fehlzeit.':'Сообщите о периоде отсутствия.'
+  'Informieren Sie über die Fehlzeit.':'Сообщите о периоде отсутствия.', 'Fragen Sie nach den Hausaufgaben.':'Спросите о домашних заданиях.',
+  'Wann kommen Sie wieder?':'Когда вы снова придёте?', 'Rufen Sie später an.':'Позвоните позже.'
 };
 
 const SOURCE_POINTS: Record<number, string[]> = {
@@ -51,13 +66,44 @@ const SOURCE_POINTS: Record<number, string[]> = {
   62:['Warum?','Rufen Sie später an.']
 };
 
+const INSTRUCTION_RU = 'На каждый пункт напишите одно-два предложения на бланке ответа (около 30 слов). Также напишите обращение и прощание.';
+
+async function imageToDataUrl(file: File): Promise<string> {
+  if (!file.type.startsWith('image/')) throw new Error('Для рукописного ответа нужен файл изображения (JPG, PNG или WEBP).');
+  const source = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('Не удалось прочитать изображение.'));
+      img.src = String(reader.result);
+    };
+    reader.onerror = () => reject(new Error('Не удалось прочитать файл.'));
+    reader.readAsDataURL(file);
+  });
+
+  const maxSide = 1800;
+  const scale = Math.min(1, maxSide / Math.max(source.naturalWidth, source.naturalHeight));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(source.naturalWidth * scale));
+  canvas.height = Math.max(1, Math.round(source.naturalHeight * scale));
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Не удалось подготовить изображение.');
+  ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', 0.82);
+}
+
 export function SchreibenTeil2({ tasks, onBack }: Props) {
   const { progress, record } = useSchreibenProgress(2, tasks.length);
   const [index, setIndex] = useState(progress.nextIndex < tasks.length ? progress.nextIndex : 0);
   const [text, setText] = useState('');
   const [checked, setChecked] = useState(false);
+  const [checking, setChecking] = useState(false);
   const [showRu, setShowRu] = useState(false);
   const [fileName, setFileName] = useState('');
+  const [imageData, setImageData] = useState('');
+  const [error, setError] = useState('');
+  const [result, setResult] = useState<CheckResult | null>(null);
 
   const task = tasks[index];
   const points = SOURCE_POINTS[index + 1] ?? task.points;
@@ -65,25 +111,74 @@ export function SchreibenTeil2({ tasks, onBack }: Props) {
   const validLength = words >= task.minWords && words <= task.maxWords;
   const situationRu = schreibenTeil2SituationRu[index] ?? '';
 
-  const finish = () => {
-    if (!validLength && !fileName) return;
-    record(null);
-    setChecked(true);
+  const handleImage = async (file?: File) => {
+    if (!file) return;
+    setError(''); setResult(null); setChecked(false);
+    try {
+      const dataUrl = await imageToDataUrl(file);
+      if (dataUrl.length > 7000000) throw new Error('Фото слишком большое. Сделайте более компактное фото листа.');
+      setImageData(dataUrl);
+      setFileName(file.name);
+      setText('');
+    } catch (e) {
+      setImageData(''); setFileName('');
+      setError(e instanceof Error ? e.message : 'Не удалось загрузить фото.');
+    }
+  };
+
+  const finish = async () => {
+    if (!text.trim() && !imageData) return;
+    setChecking(true); setError('');
+    try {
+      const response = await fetch('/api/check-schreiben', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task: task.situation, points, minWords: task.minWords, maxWords: task.maxWords, text: text.trim(), image: imageData || undefined })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.error || 'Не удалось проверить ответ.');
+      setResult(data as CheckResult);
+      record(Number(data.score) || 0);
+      setChecked(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Не удалось проверить ответ.');
+    } finally {
+      setChecking(false);
+    }
   };
 
   const next = () => {
     setIndex((index + 1) % tasks.length);
-    setText(''); setFileName(''); setChecked(false); setShowRu(false);
+    setText(''); setFileName(''); setImageData(''); setChecked(false); setShowRu(false); setResult(null); setError('');
   };
 
-  if (checked) return (
-    <div className="animate-scale-in py-10 text-center">
-      <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-amber-50"><Trophy className="h-10 w-10 text-amber-700" /></div>
-      <h2 className="text-2xl font-bold text-slate-900">Antwort gespeichert</h2>
-      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">Deine Antwort wurde gespeichert. Die inhaltliche Prüfung des freien Textes wird separat angeschlossen.</p>
-      <div className="mt-7 flex justify-center gap-3">
-        <button onClick={next} className="flex items-center gap-2 rounded-xl bg-amber-600 px-5 py-3 font-semibold text-white transition hover:bg-amber-700">Nächste Aufgabe <Send className="h-4 w-4" /></button>
-        <button onClick={onBack} className="rounded-xl bg-slate-100 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-200">Zurück</button>
+  if (checked && result) return (
+    <div className="animate-scale-in py-6">
+      <div className="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <div className="text-center">
+          <div className={cn('mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full', result.passed ? 'bg-emerald-50' : 'bg-amber-50')}>
+            {result.passed ? <Trophy className="h-10 w-10 text-emerald-600" /> : <XCircle className="h-10 w-10 text-amber-600" />}
+          </div>
+          <p className="text-xs font-bold uppercase tracking-wider text-amber-700">Schreiben · Teil 2</p>
+          <h2 className="mt-1 text-2xl font-bold text-slate-900">{result.passed ? 'Gut gemacht!' : 'Нужно немного доработать'}</h2>
+          <div className="mx-auto mt-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-xl font-extrabold text-slate-800">{Math.round(result.score)}</div>
+          <p className="mt-2 text-xs text-slate-500">Оценка тренажёра по критериям A1, не официальный балл Goethe</p>
+        </div>
+
+        {result.transcription && <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50 p-4"><p className="text-xs font-bold uppercase tracking-wide text-blue-700">Распознанный рукописный текст</p><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-800">{result.transcription}</p></div>}
+
+        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+          {Object.entries(result.criteria).map(([key, criterion]) => <div key={key} className="rounded-xl bg-slate-50 p-3"><div className="flex items-center justify-between text-sm font-bold text-slate-800"><span>{({taskCompletion:'Выполнение задания',format:'Формат письма',communicativeSuccess:'Понятность',grammar:'Грамматика A1',vocabulary:'Лексика A1',spelling:'Орфография'} as Record<string,string>)[key] ?? key}</span><span>{criterion.score}/{criterion.max}</span></div><p className="mt-1 text-xs leading-5 text-slate-500">{criterion.comment}</p></div>)}
+        </div>
+
+        <div className="mt-5 rounded-xl border border-slate-200 p-4"><p className="text-sm font-bold text-slate-800">Пункты задания</p>{result.points.map((p, i) => <div key={i} className="mt-2 flex gap-2 text-sm"><span className={p.covered ? 'text-emerald-600' : 'text-red-500'}>{p.covered ? '✓' : '✕'}</span><div><span className="font-medium">{p.point}</span>{p.evidence && <span className="ml-1 text-slate-500">— {p.evidence}</span>}</div></div>)}</div>
+
+        {result.corrections.length > 0 && <div className="mt-5 rounded-xl border border-amber-100 bg-amber-50 p-4"><p className="text-sm font-bold text-amber-900">Что исправить</p>{result.corrections.map((c, i) => <div key={i} className="mt-3 text-sm"><p><span className="text-red-600 line-through">{c.original}</span> → <span className="font-bold text-emerald-700">{c.corrected}</span></p><p className="mt-1 text-xs leading-5 text-slate-600">{c.explanation}</p></div>)}</div>}
+
+        {result.strengths.length > 0 && <div className="mt-5 rounded-xl border border-emerald-100 bg-emerald-50 p-4"><p className="text-sm font-bold text-emerald-900">Что получилось хорошо</p><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">{result.strengths.map((s, i) => <li key={i}>{s}</li>)}</ul></div>}
+        <div className="mt-5 rounded-xl bg-slate-50 p-4 text-sm leading-6 text-slate-700"><span className="font-bold">Обратная связь: </span>{result.feedback}</div>
+
+        <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row"><button onClick={next} className="flex items-center justify-center gap-2 rounded-xl bg-amber-600 px-5 py-3 font-semibold text-white transition hover:bg-amber-700">Следующее задание <Send className="h-4 w-4" /></button><button onClick={onBack} className="rounded-xl bg-slate-100 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-200">Назад</button></div>
       </div>
     </div>
   );
@@ -99,23 +194,29 @@ export function SchreibenTeil2({ tasks, onBack }: Props) {
     <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="border-b border-slate-200 bg-slate-200 px-5 py-3 text-center sm:px-8"><div className="text-lg font-extrabold tracking-tight text-slate-900">Schreiben</div><div className="mt-1 inline-block bg-slate-300 px-5 py-1 text-xs font-semibold text-slate-700">Kandidatenblatt</div></div>
       <div className="px-5 py-6 sm:px-10 sm:py-8">
-        <div className="mb-6 flex items-center justify-between gap-3"><h2 className="text-2xl font-extrabold text-slate-900">Teil 2</h2><button onClick={() => setShowRu(v => !v)} title="Русский перевод задания" className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition', showRu ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500 hover:bg-slate-200')}><Eye className="h-4 w-4" /></button></div>
+        <div className="mb-6 flex items-center justify-between gap-3"><h2 className="text-2xl font-extrabold text-slate-900">Teil 2</h2><button onClick={() => setShowRu(v => !v)} title="Русский перевод" className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition', showRu ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500 hover:bg-slate-200')}><Eye className="h-4 w-4" /></button></div>
         <div className="text-[15px] leading-7 text-slate-800">
           <GermanWordTooltip text={task.situation} />
           <div className="mt-5 space-y-1 pl-4 sm:pl-8">{points.map((point, i) => <div key={i} className="flex gap-3"><span className="shrink-0">–</span><GermanWordTooltip text={point} /></div>)}</div>
           {showRu && <div className="mt-5 rounded-xl border border-amber-100 bg-amber-50 p-4 text-sm leading-6 text-slate-700"><p className="mb-2 font-bold text-amber-800">Перевод задания</p><p>{situationRu}</p><div className="mt-3 space-y-1">{points.map((point, i) => <p key={i}>– {POINT_RU[point] ?? point}</p>)}</div></div>}
         </div>
-        <div className="mx-auto mt-8 max-w-md rotate-[-1deg] border border-slate-300 bg-slate-50 px-5 py-4 text-center shadow-md"><p className="text-sm font-medium italic leading-6 text-slate-600">Schreiben Sie zu jedem Punkt<br />ein bis zwei Sätze auf dem<br />Antwortbogen (circa 30 Wörter).<br />Schreiben Sie auch eine Anrede<br />und einen Gruß.</p></div>
+
+        <div className="mx-auto mt-8 max-w-md rotate-[-1deg] border border-slate-300 bg-slate-50 px-5 py-4 text-center shadow-md"><p className="text-sm font-medium italic leading-6 text-slate-600">Schreiben Sie zu jedem Punkt<br />ein bis zwei Sätze auf dem<br />Antwortbogen (circa 30 Wörter).<br />Schreiben Sie auch eine Anrede<br />und einen Gruß.</p>{showRu && <p className="mt-3 border-t border-slate-200 pt-3 text-xs font-medium not-italic leading-5 text-amber-800">{INSTRUCTION_RU}</p>}</div>
+
         <div className="mt-8 border-t border-slate-200 pt-6">
-          <div className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-800"><PenLine className="h-4 w-4 text-amber-700" /> Ihre Antwort</div>
-          <div className="mb-3 flex items-center justify-between gap-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-800"><span>Circa 30 Wörter</span><span className={cn('rounded-full px-2.5 py-1 font-bold', validLength ? 'bg-emerald-100 text-emerald-700' : 'bg-white text-slate-600')}>{words} / {task.minWords}–{task.maxWords}</span></div>
-          <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Schreiben Sie Ihre Antwort hier..." className="min-h-[230px] w-full resize-y rounded-xl border border-slate-200 p-4 text-slate-800 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100" />
-          <label className="mt-3 flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 transition hover:border-amber-400 hover:bg-amber-50"><FileUp className="h-5 w-5 text-slate-500" /><span className="min-w-0 flex-1 text-sm text-slate-600">Oder Foto / Datei des handgeschriebenen Briefes hochladen</span><input type="file" accept="image/*,.pdf,.doc,.docx" className="hidden" onChange={e => setFileName(e.target.files?.[0]?.name || '')} /></label>
-          {fileName && <p className="mt-2 text-xs text-slate-500">Datei: {fileName}</p>}
-          <button onClick={finish} disabled={!validLength && !fileName} className={cn('mt-5 flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3 font-semibold transition', validLength || fileName ? 'bg-amber-600 text-white hover:bg-amber-700' : 'cursor-not-allowed bg-slate-100 text-slate-400')}><CheckCircle2 className="h-4 w-4" /> Prüfen</button>
+          <div className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-800"><PenLine className="h-4 w-4 text-amber-700" /> {showRu ? 'Ваш ответ' : 'Ihre Antwort'}</div>
+          <div className="mb-3 flex items-center justify-between gap-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-800"><span>{showRu ? 'Около 30 слов' : 'Circa 30 Wörter'}</span><span className={cn('rounded-full px-2.5 py-1 font-bold', validLength ? 'bg-emerald-100 text-emerald-700' : 'bg-white text-slate-600')}>{words} / {task.minWords}–{task.maxWords}</span></div>
+          <textarea value={text} onChange={e => { setText(e.target.value); setImageData(''); setFileName(''); setResult(null); }} placeholder={showRu ? 'Напишите здесь свой ответ…' : 'Schreiben Sie Ihre Antwort hier...'} className="min-h-[230px] w-full resize-y rounded-xl border border-slate-200 p-4 text-slate-800 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100" />
+
+          <label className="mt-3 flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 transition hover:border-amber-400 hover:bg-amber-50"><FileUp className="h-5 w-5 shrink-0 text-slate-500" /><span className="min-w-0 flex-1 text-sm text-slate-600">{showRu ? 'Или загрузите фото рукописного письма — ИИ распознает и проверит его' : 'Oder Foto des handgeschriebenen Briefes hochladen — die KI erkennt und prüft den Text'}</span><input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={e => { void handleImage(e.target.files?.[0]); e.currentTarget.value = ''; }} /></label>
+          {fileName && <div className="mt-2 flex items-center gap-2 text-xs text-slate-500"><span className="truncate">Фото: {fileName}</span>{imageData && <img src={imageData} alt="Предпросмотр рукописного ответа" className="h-12 w-12 rounded-lg border border-slate-200 object-cover" />}</div>}
+          {error && <div className="mt-3 rounded-xl border border-red-100 bg-red-50 p-3 text-sm leading-5 text-red-700">{error}</div>}
+
+          <button onClick={() => void finish()} disabled={checking || (!text.trim() && !imageData)} className={cn('mt-5 flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3 font-semibold transition', !checking && (text.trim() || imageData) ? 'bg-amber-600 text-white hover:bg-amber-700' : 'cursor-not-allowed bg-slate-100 text-slate-400')}>{checking ? <><Loader2 className="h-4 w-4 animate-spin" /> ИИ проверяет письмо…</> : <><CheckCircle2 className="h-4 w-4" /> {showRu ? 'Проверить письмо' : 'Prüfen'}</>}</button>
+          <p className="mt-2 text-center text-xs leading-5 text-slate-400">ИИ проверяет выполнение всех пунктов, обращение и прощание, понятность, грамматику, лексику и орфографию уровня A1.</p>
         </div>
       </div>
     </section>
-    <button onClick={() => { setIndex(progress.nextIndex); setText(''); setFileName(''); }} className="mx-auto mt-4 flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-700"><RotateCcw className="h-3.5 w-3.5" /> Mit gespeicherter Position fortsetzen</button>
+    <button onClick={() => { setIndex(progress.nextIndex); setText(''); setFileName(''); setImageData(''); setResult(null); setError(''); }} className="mx-auto mt-4 flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-700"><RotateCcw className="h-3.5 w-3.5" /> Mit gespeicherter Position fortsetzen</button>
   </div>;
 }
