@@ -1,4 +1,4 @@
-const MODEL = process.env.OPENAI_MODEL || 'gpt-5.6-luna';
+const MODEL = process.env.OPENAI_MODEL || 'gpt-5-mini';
 
 const SYSTEM_PROMPT = `You are the German writing evaluator for an original Goethe-Zertifikat A1 training app.
 Evaluate ONLY the learner's supplied task and answer. Use A1 expectations. Never demand B1/B2 grammar or vocabulary.
