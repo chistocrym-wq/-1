@@ -26,12 +26,12 @@ export interface MatchingQuestion extends BaseQuestion {
   type: 'matching';
   items: string[];
   matches: string[];
-  correctPairs: number[]; // index into matches for each item
+  correctPairs: number[];
 }
 
 export interface FillBlankQuestion extends BaseQuestion {
   type: 'fill-blank';
-  text: string; // text with ___ for blanks
+  text: string;
   answer: string;
   alternatives?: string[];
 }
@@ -75,7 +75,7 @@ export interface ListeningTask {
   id: string;
   title: string;
   instruction: string;
-  audioText: string; // text for TTS
+  audioText: string;
   questions: (MultipleChoiceQuestion | TrueFalseQuestion)[];
 }
 
@@ -85,7 +85,7 @@ export interface WritingTask {
   instruction: string;
   type: 'email' | 'message' | 'form';
   situation: string;
-  points: string[]; // bullet points to cover
+  points: string[];
   sampleAnswer: string;
   minWords: number;
   maxWords: number;
@@ -112,6 +112,7 @@ export interface ModuleProgress {
 export interface Progress {
   [key: string]: ModuleProgress;
 }
+
 export type LesenTeil2VisualType =
   | 'shop'
   | 'cinema'
@@ -145,4 +146,45 @@ export interface ReadingTeil2Task {
     b: LesenTeil2Option;
   };
   correctAnswer: 'a' | 'b';
+}
+
+// =============================
+// SCHREIBEN – neue Struktur
+// =============================
+
+export type SchreibenFieldType =
+  | 'text'
+  | 'number'
+  | 'date'
+  | 'time'
+  | 'select'
+  | 'radio'
+  | 'checkbox';
+
+export interface SchreibenFormField {
+  id: string;
+  label: string;
+  type: SchreibenFieldType;
+  value?: string;
+  options?: string[];
+  answer: string;
+}
+
+export interface SchreibenTeil1Task {
+  id: string;
+  title: string;
+  situation: string;
+  formTitle: string;
+  formSubtitle?: string;
+  fields: SchreibenFormField[];
+}
+
+export interface SchreibenTeil2Task {
+  id: string;
+  title: string;
+  situation: string;
+  points: string[];
+  minWords: number;
+  maxWords: number;
+  sampleAnswer?: string;
 }
