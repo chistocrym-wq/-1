@@ -212,6 +212,6 @@ export default async function handler(req, res) {
     return jsonResponse(res, 200, sanitizeResult(result, points));
   } catch (error) {
     console.error('check-schreiben error', error);
-    return jsonResponse(res, 500, { error: 'Die KI-Prüfung konnte nicht выполнена.' });
+    return jsonResponse(res, 500, { error: 'Die KI-Prüfung konnte nicht durchgeführt werden.' });
   }
 }
