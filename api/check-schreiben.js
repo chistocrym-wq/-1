@@ -67,7 +67,7 @@ export default async function handler(req, res) {
     if (!task || !Array.isArray(points)) return jsonResponse(res, 400, { error: 'Task data is missing.' });
     if (!text && !image) return jsonResponse(res, 400, { error: 'No answer text or image was provided.' });
     if (typeof text === 'string' && text.length > 10000) return jsonResponse(res, 413, { error: 'Text is too long.' });
-    if (typeof image === 'string' && image.length > 7000000) return jsonResponse(res, 413, { error: 'Image is too large. Please upload a smaller photo.' });
+    if (typeof image === 'string' && image.length > 3000000) return jsonResponse(res, 413, { error: 'Image is too large. Please upload a smaller photo.' });
 
     const taskText = `TASK SITUATION:\n${task}\n\nREQUIRED POINTS:\n${points.map((p, i) => `${i + 1}. ${p}`).join('\n')}\n\nTARGET WORD COUNT: approximately ${minWords}-${maxWords} words.`;
     const userContent = [
