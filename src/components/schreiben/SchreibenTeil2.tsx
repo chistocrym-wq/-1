@@ -53,20 +53,10 @@ const POINT_RU: Record<string, string> = {
   'Wann kommen Sie wieder?':'Когда вы снова придёте?', 'Rufen Sie später an.':'Позвоните позже.'
 };
 
-const SOURCE_POINTS: Record<number, string[]> = {
-  3:['Warum?','Fragen Sie nach den Hausaufgaben.'],
-  7:['Warum?','Sie arbeiten heute länger.'],
-  19:['Neuer Termin: Montag, 18.00 Uhr.','Bitte schnell antworten.'],
-  23:['Fragen Sie nach dem Weg.','Ihr Handy funktioniert nicht.'],
-  37:['Warum?','Sie rufen später an.'],
-  43:['Warum?','Hausaufgaben.'],
-  47:['Warum?','Fragen Sie nach den Hausaufgaben.'],
-  53:['Warum?','Wann kommen Sie wieder?'],
-  58:['Neuer Termin: Dienstag, 17.00 Uhr.','Bitte schnell antworten.'],
-  62:['Warum?','Rufen Sie später an.']
-};
-
 const INSTRUCTION_RU = 'На каждый пункт напишите одно-два предложения на бланке ответа (около 30 слов). Также напишите обращение и прощание.';
+const MIN_WORDS = 30;
+const MAX_WORDS = 35;
+const MAX_IMAGE_DATA_URL_LENGTH = 3000000;
 
 async function imageToDataUrl(file: File): Promise<string> {
   if (!file.type.startsWith('image/')) throw new Error('Для рукописного ответа нужен файл изображения (JPG, PNG или WEBP).');
@@ -82,7 +72,7 @@ async function imageToDataUrl(file: File): Promise<string> {
     reader.readAsDataURL(file);
   });
 
-  const maxSide = 1800;
+  const maxSide = 1600;
   const scale = Math.min(1, maxSide / Math.max(source.naturalWidth, source.naturalHeight));
   const canvas = document.createElement('canvas');
   canvas.width = Math.max(1, Math.round(source.naturalWidth * scale));
@@ -90,7 +80,7 @@ async function imageToDataUrl(file: File): Promise<string> {
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Не удалось подготовить изображение.');
   ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
-  return canvas.toDataURL('image/jpeg', 0.82);
+  return canvas.toDataURL('image/jpeg', 0.78);
 }
 
 export function SchreibenTeil2({ tasks, onBack }: Props) {
@@ -106,9 +96,9 @@ export function SchreibenTeil2({ tasks, onBack }: Props) {
   const [result, setResult] = useState<CheckResult | null>(null);
 
   const task = tasks[index];
-  const points = SOURCE_POINTS[index + 1] ?? task.points;
+  const points = task.points;
   const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-  const validLength = words >= task.minWords && words <= task.maxWords;
+  const validLength = words >= MIN_WORDS && words <= MAX_WORDS;
   const situationRu = schreibenTeil2SituationRu[index] ?? '';
 
   const handleImage = async (file?: File) => {
@@ -116,7 +106,7 @@ export function SchreibenTeil2({ tasks, onBack }: Props) {
     setError(''); setResult(null); setChecked(false);
     try {
       const dataUrl = await imageToDataUrl(file);
-      if (dataUrl.length > 7000000) throw new Error('Фото слишком большое. Сделайте более компактное фото листа.');
+      if (dataUrl.length > MAX_IMAGE_DATA_URL_LENGTH) throw new Error('Фото слишком большое. Сделайте более компактное фото листа.');
       setImageData(dataUrl);
       setFileName(file.name);
       setText('');
@@ -133,10 +123,12 @@ export function SchreibenTeil2({ tasks, onBack }: Props) {
       const response = await fetch('/api/check-schreiben', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ task: task.situation, points, minWords: task.minWords, maxWords: task.maxWords, text: text.trim(), image: imageData || undefined })
+        body: JSON.stringify({ task: task.situation, points, minWords: MIN_WORDS, maxWords: MAX_WORDS, text: text.trim(), image: imageData || undefined })
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data?.error || 'Не удалось проверить ответ.');
+      const contentType = response.headers.get('content-type') || '';
+      const data = contentType.includes('application/json') ? await response.json() : { error: `Сервер проверки вернул ${response.status} без JSON. Проверьте, что тренажёр открыт на Vercel с API /api/check-schreiben.` };
+      if (!response.ok) throw new Error(data?.error || `Ошибка API (${response.status}).`);
+      if (!data || typeof data.score !== 'number') throw new Error('API проверки вернул неполный ответ. Попробуйте ещё раз.');
       setResult(data as CheckResult);
       record(Number(data.score) || 0);
       setChecked(true);
@@ -205,7 +197,7 @@ export function SchreibenTeil2({ tasks, onBack }: Props) {
 
         <div className="mt-8 border-t border-slate-200 pt-6">
           <div className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-800"><PenLine className="h-4 w-4 text-amber-700" /> {showRu ? 'Ваш ответ' : 'Ihre Antwort'}</div>
-          <div className="mb-3 flex items-center justify-between gap-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-800"><span>{showRu ? 'Около 30 слов' : 'Circa 30 Wörter'}</span><span className={cn('rounded-full px-2.5 py-1 font-bold', validLength ? 'bg-emerald-100 text-emerald-700' : 'bg-white text-slate-600')}>{words} / {task.minWords}–{task.maxWords}</span></div>
+          <div className="mb-3 flex items-center justify-between gap-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-800"><span>{showRu ? 'Около 30 слов' : 'Circa 30 Wörter'}</span><span className={cn('rounded-full px-2.5 py-1 font-bold', validLength ? 'bg-emerald-100 text-emerald-700' : 'bg-white text-slate-600')}>{words} / {MIN_WORDS}–{MAX_WORDS}</span></div>
           <textarea value={text} onChange={e => { setText(e.target.value); setImageData(''); setFileName(''); setResult(null); }} placeholder={showRu ? 'Напишите здесь свой ответ…' : 'Schreiben Sie Ihre Antwort hier...'} className="min-h-[230px] w-full resize-y rounded-xl border border-slate-200 p-4 text-slate-800 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100" />
 
           <label className="mt-3 flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 transition hover:border-amber-400 hover:bg-amber-50"><FileUp className="h-5 w-5 shrink-0 text-slate-500" /><span className="min-w-0 flex-1 text-sm text-slate-600">{showRu ? 'Или загрузите фото рукописного письма — ИИ распознает и проверит его' : 'Oder Foto des handgeschriebenen Briefes hochladen — die KI erkennt und prüft den Text'}</span><input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={e => { void handleImage(e.target.files?.[0]); e.currentTarget.value = ''; }} /></label>
