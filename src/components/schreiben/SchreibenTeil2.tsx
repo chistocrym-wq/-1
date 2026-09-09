@@ -26,7 +26,10 @@ export function SchreibenTeil2({ tasks, onBack }: Props) {
 
   const next = () => {
     setIndex((index + 1) % tasks.length);
-    setText(''); setFileName(''); setChecked(false); setShowRu(false);
+    setText('');
+    setFileName('');
+    setChecked(false);
+    setShowRu(false);
   };
 
   if (checked) return (
@@ -36,7 +39,7 @@ export function SchreibenTeil2({ tasks, onBack }: Props) {
       </div>
       <h2 className="text-2xl font-bold text-slate-900">Antwort gespeichert</h2>
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
-        Die AI-Prüfung für Briefe wird als nächster Schritt angeschlossen. Dein Fortschritt wurde bereits gespeichert.
+        Deine Antwort wurde gespeichert. Die inhaltliche Prüfung des freien Textes wird separat angeschlossen.
       </p>
       <div className="mt-7 flex justify-center gap-3">
         <button onClick={next} className="flex items-center gap-2 rounded-xl bg-amber-600 px-5 py-3 font-semibold text-white transition hover:bg-amber-700">
@@ -54,59 +57,98 @@ export function SchreibenTeil2({ tasks, onBack }: Props) {
           <ArrowLeft className="h-5 w-5 text-slate-600" />
         </button>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-bold uppercase tracking-wider text-amber-700">SCHREIBEN · TEIL 2</p>
-          <h1 className="text-xl font-bold text-slate-900">Briefe</h1>
+          <p className="text-xs font-bold uppercase tracking-wider text-amber-700">SCHREIBEN</p>
+          <h1 className="text-xl font-bold text-slate-900">Teil 2</h1>
         </div>
         <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">{index + 1} / {tasks.length}</span>
       </div>
 
-      <div className="mb-4 h-2 overflow-hidden rounded-full bg-slate-100">
+      <div className="mb-5 h-2 overflow-hidden rounded-full bg-slate-100">
         <div className="h-full rounded-full bg-amber-500 transition-all" style={{ width: `${((index + 1) / tasks.length) * 100}%` }} />
       </div>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Aufgabe {index + 1}</p>
-            <h2 className="mt-1 text-lg font-bold text-slate-900">{task.title}</h2>
+      {/* Exam-style task sheet: the prompt is deliberately kept close to the supplied reference layout. */}
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 bg-slate-200 px-5 py-3 text-center sm:px-8">
+          <div className="text-lg font-extrabold tracking-tight text-slate-900">Schreiben</div>
+          <div className="mt-1 inline-block bg-slate-300 px-5 py-1 text-xs font-semibold text-slate-700">Kandidatenblatt</div>
+        </div>
+
+        <div className="px-5 py-6 sm:px-10 sm:py-8">
+          <div className="mb-6 flex items-center justify-between gap-3">
+            <h2 className="text-2xl font-extrabold text-slate-900">Teil 2</h2>
+            <button onClick={() => setShowRu(v => !v)} title="Russische Übersetzung" className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition', showRu ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500 hover:bg-slate-200')}>
+              <Eye className="h-4 w-4" />
+            </button>
           </div>
-          <button onClick={() => setShowRu(v => !v)} title="Russische Übersetzung" className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition', showRu ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500 hover:bg-slate-200')}>
-            <Eye className="h-4 w-4" />
-          </button>
-        </div>
 
-        <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <p className="text-sm leading-6 text-slate-700">{task.situation}</p>
-          {showRu && <p className="mt-3 border-t border-slate-200 pt-3 text-sm leading-6 text-slate-500">Русский перевод будет автоматически формироваться AI после подключения переводчика.</p>}
-        </div>
+          <div className="text-[15px] leading-7 text-slate-800">
+            <p className="font-medium">{task.situation}</p>
 
-        <div className="mt-5">
-          <div className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-800"><PenLine className="h-4 w-4 text-amber-700" /> Schreiben Sie zu jedem Punkt.</div>
-          <div className="space-y-2">
-            {task.points.map((point, i) => <div key={i} className="flex gap-3 rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-700"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-50 text-xs font-bold text-amber-700">{i + 1}</span><span>{point}</span></div>)}
+            {showRu && (
+              <p className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm leading-6 text-slate-500">
+                Русский перевод задания будет добавлен отдельно. Сейчас здесь отображается только исходная формулировка задания.
+              </p>
+            )}
+
+            <div className="mt-5 space-y-1 pl-4 sm:pl-8">
+              {task.points.map((point, i) => (
+                <div key={i} className="flex gap-3">
+                  <span className="shrink-0">–</span>
+                  <span>{point}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mx-auto mt-8 max-w-md rotate-[-1deg] border border-slate-300 bg-slate-50 px-5 py-4 text-center shadow-md">
+            <p className="text-sm font-medium italic leading-6 text-slate-600">
+              Schreiben Sie zu jedem Punkt<br />
+              ein bis zwei Sätze auf dem<br />
+              Antwortbogen (circa 30 Wörter).<br />
+              Schreiben Sie auch eine Anrede<br />
+              und einen Gruß.
+            </p>
+          </div>
+
+          <div className="mt-8 border-t border-slate-200 pt-6">
+            <div className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-800">
+              <PenLine className="h-4 w-4 text-amber-700" /> Ihre Antwort
+            </div>
+            <div className="mb-3 flex items-center justify-between gap-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">
+              <span>Circa 30 Wörter</span>
+              <span className={cn('rounded-full px-2.5 py-1 font-bold', validLength ? 'bg-emerald-100 text-emerald-700' : 'bg-white text-slate-600')}>
+                {words} / {task.minWords}–{task.maxWords}
+              </span>
+            </div>
+            <textarea
+              value={text}
+              onChange={e => setText(e.target.value)}
+              placeholder="Schreiben Sie Ihre Antwort hier..."
+              className="min-h-[230px] w-full resize-y rounded-xl border border-slate-200 p-4 text-slate-800 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+            />
+
+            <label className="mt-3 flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 transition hover:border-amber-400 hover:bg-amber-50">
+              <FileUp className="h-5 w-5 text-slate-500" />
+              <span className="min-w-0 flex-1 text-sm text-slate-600">Oder Foto / Datei des handgeschriebenen Briefes hochladen</span>
+              <input type="file" accept="image/*,.pdf,.doc,.docx" className="hidden" onChange={e => setFileName(e.target.files?.[0]?.name || '')} />
+            </label>
+            {fileName && <p className="mt-2 text-xs text-slate-500">Datei: {fileName}</p>}
+
+            <button
+              onClick={finish}
+              disabled={!validLength && !fileName}
+              className={cn('mt-5 flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3 font-semibold transition', validLength || fileName ? 'bg-amber-600 text-white hover:bg-amber-700' : 'cursor-not-allowed bg-slate-100 text-slate-400')}
+            >
+              <CheckCircle2 className="h-4 w-4" /> Prüfen
+            </button>
           </div>
         </div>
-
-        <div className="mt-5 flex items-center justify-between gap-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">
-          <span>Schreiben Sie circa 30 Wörter.</span>
-          <span className={cn('rounded-full px-2.5 py-1 font-bold', validLength ? 'bg-emerald-100 text-emerald-700' : 'bg-white text-slate-600')}>{words} / {task.minWords}-{task.maxWords}</span>
-        </div>
-
-        <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Schreiben Sie hier Ihre Nachricht..." className="mt-4 min-h-[230px] w-full resize-y rounded-xl border border-slate-200 p-4 text-slate-800 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100" />
-
-        <label className="mt-3 flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 transition hover:border-amber-400 hover:bg-amber-50">
-          <FileUp className="h-5 w-5 text-slate-500" />
-          <span className="min-w-0 flex-1 text-sm text-slate-600">Oder Foto / Datei des handgeschriebenen Briefes hochladen</span>
-          <input type="file" accept="image/*,.pdf,.doc,.docx" className="hidden" onChange={e => setFileName(e.target.files?.[0]?.name || '')} />
-        </label>
-        {fileName && <p className="mt-2 text-xs text-slate-500">Datei: {fileName}</p>}
-
-        <button onClick={finish} disabled={!validLength && !fileName} className={cn('mt-5 flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3 font-semibold transition', validLength || fileName ? 'bg-amber-600 text-white hover:bg-amber-700' : 'cursor-not-allowed bg-slate-100 text-slate-400')}>
-          <CheckCircle2 className="h-4 w-4" /> Prüfen
-        </button>
       </section>
 
-      <button onClick={() => { setIndex(progress.nextIndex); setText(''); setFileName(''); }} className="mx-auto mt-4 flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-700"><RotateCcw className="h-3.5 w-3.5" /> Mit gespeicherter Position fortsetzen</button>
+      <button onClick={() => { setIndex(progress.nextIndex); setText(''); setFileName(''); }} className="mx-auto mt-4 flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-700">
+        <RotateCcw className="h-3.5 w-3.5" /> Mit gespeicherter Position fortsetzen
+      </button>
     </div>
   );
 }
