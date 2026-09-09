@@ -1,4 +1,4 @@
-const MODEL = process.env.OPENAI_MODEL || 'gpt-5-mini';
+const MODEL = process.env.OPENAI_MODEL || 'gpt-5.6-luna';
 
 const SYSTEM_PROMPT = `You are the German writing evaluator for an original Goethe-Zertifikat A1 training app. Evaluate only the supplied task and learner answer. Never demand B1/B2.
 
@@ -7,6 +7,7 @@ SCORING:
 - Communicative design is exactly 1, 0.5, or 0 for appropriate greeting/closing and understandable organization.
 - Final trainer score = (sum content points + communicative design) / maximum * 100. Diagnostic grammar/vocabulary/spelling scores NEVER change the final score.
 - Natural A1 wording is accepted; exact model wording is never required.
+- CRITICAL: Do not mark a required content point as missing merely because of grammar, article, case, ending, word order, verb form or spelling mistakes. Judge whether the intended information is understandable and communicated.
 
 LANGUAGE-ERROR POLICY:
 - Grammar, articles, cases/endings, word order, verb forms, vocabulary forms and spelling errors DO NOT reduce content-point scores when the meaning is understandable and the required point is fulfilled.
@@ -14,7 +15,7 @@ LANGUAGE-ERROR POLICY:
 - Only reduce a content point when the language error makes the requested information genuinely unclear, changes its meaning, or means the point was not communicated.
 
 LETTER RULES:
-- The answer must contain AT LEAST 30 words in this trainer. Count actual words. If fewer than 30, clearly report that the minimum was not reached and encourage adding relevant information.
+- The answer must contain AT LEAST 30 words in this trainer. Count actual words. If fewer than 30, clearly report that the minimum was not reached.
 - Prefer short, clear A1 sentences.
 - Personal: Lieber/Liebe + name; Viele Grüße + name.
 - Formal: Sehr geehrte Damen und Herren / Sehr geehrter Herr ... / Sehr geehrte Frau ...; Mit freundlichen Grüßen + name.
@@ -40,7 +41,12 @@ function outputText(data) {
   return (data.output || []).flatMap(x => x.content || []).map(x => x.text).filter(Boolean).join('\n');
 }
 function parseJson(text) {
-  return JSON.parse(String(text).trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim());
+  const cleaned = String(text).trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
+  try { return JSON.parse(cleaned); } catch {
+    const match = cleaned.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('OpenAI returned invalid JSON.');
+    return JSON.parse(match[0]);
+  }
 }
 function half(value, max) {
   const n = Number(value);
@@ -89,27 +95,40 @@ function sanitize(result, points) {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return send(res, 405, { error: 'Method not allowed' });
-  if (!process.env.OPENAI_API_KEY) return send(res, 500, { error: 'OPENAI_API_KEY is not configured on the server.' });
+  if (!process.env.OPENAI_API_KEY) return send(res, 500, { error: 'OPENAI_API_KEY is not configured on the server. В Vercel ключ должен быть добавлен для того окружения, где открыт тренажёр.' });
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
-    const { task, points, minWords = 30, text, image } = body;
+    const { task, points, text, image } = body;
     if (!task || !Array.isArray(points) || !points.length) return send(res, 400, { error: 'Task data is missing.' });
     if (!text && !image) return send(res, 400, { error: 'No answer text or image was provided.' });
     if (typeof text === 'string' && text.length > 10000) return send(res, 413, { error: 'Text is too long.' });
-    if (typeof image === 'string' && image.length > 3000000) return send(res, 413, { error: 'Image is too large. Please upload a smaller photo.' });
-    const taskText = ['TASK SITUATION:', String(task), '', 'REQUIRED POINTS:', ...points.map((p, i) => `${i + 1}. ${String(p)}`), '', `MINIMUM WORD COUNT: ${minWords} words.`, '', 'Evaluate the learner answer and return JSON only.'].join('\n');
+    if (typeof image === 'string' && image.length > 3000000) return send(res, 413, { error: 'Фото слишком большое. Загрузите более компактное фото.' });
+
+    const taskText = ['TASK SITUATION:', String(task), '', 'REQUIRED POINTS:', ...points.map((p, i) => `${i + 1}. ${String(p)}`), '', 'MINIMUM WORD COUNT: 30 words.', '', 'Evaluate the learner answer and return JSON only.'].join('\n');
     const content = [{ type: 'input_text', text: taskText }];
     if (image) content.push({ type: 'input_image', image_url: image });
     else content.push({ type: 'input_text', text: `LEARNER ANSWER:\n${String(text)}` });
+
     const response = await fetch('https://api.openai.com/v1/responses', {
-      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}` },
-      body: JSON.stringify({ model: MODEL, store: false, input: [{ role: 'system', content: [{ type: 'input_text', text: SYSTEM_PROMPT }] }, { role: 'user', content }], max_output_tokens: 2200 })
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}` },
+      body: JSON.stringify({
+        model: MODEL,
+        store: false,
+        input: [
+          { role: 'system', content: [{ type: 'input_text', text: SYSTEM_PROMPT }] },
+          { role: 'user', content }
+        ],
+        max_output_tokens: 1400
+      })
     });
     const data = await response.json();
-    if (!response.ok) return send(res, response.status, { error: data?.error?.message || 'OpenAI request failed.' });
-    return send(res, 200, sanitize(parseJson(outputText(data)), points));
+    if (!response.ok) return send(res, response.status, { error: `OpenAI API: ${data?.error?.message || 'request failed'}` });
+    const output = outputText(data);
+    if (!output) return send(res, 502, { error: 'OpenAI API вернул пустой ответ. Попробуйте ещё раз.' });
+    return send(res, 200, sanitize(parseJson(output), points));
   } catch (error) {
     console.error('check-schreiben error', error);
-    return send(res, 500, { error: 'Die KI-Prüfung konnte nicht durchgeführt werden.' });
+    return send(res, 500, { error: error instanceof Error ? error.message : 'Die KI-Prüfung konnte nicht durchgeführt werden.' });
   }
 }
