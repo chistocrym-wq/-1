@@ -1,4 +1,4 @@
-const MODEL = process.env.OPENAI_MODEL || 'gpt-5.6-luna';
+const MODEL = process.env.OPENAI_MODEL || 'gpt-5';
 
 const SYSTEM_PROMPT = `You are the German writing evaluator for an original Goethe-Zertifikat A1 training app. Evaluate only the supplied task and learner answer. Never demand B1/B2.
 
@@ -129,6 +129,6 @@ export default async function handler(req, res) {
     return send(res, 200, sanitize(parseJson(output), points));
   } catch (error) {
     console.error('check-schreiben error', error);
-    return send(res, 500, { error: error instanceof Error ? error.message : 'Die KI-Prüfung konnte nicht durchgeführt werden.' });
+    return send(res, 500, { error: error instanceof Error ? error.message : 'Die KI-Prüfung konnte nicht выполнена.' });
   }
 }
