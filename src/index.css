@@ -19,9 +19,8 @@
     overscroll-behavior-y: none;
     -webkit-tap-highlight-color: transparent;
   }
-  /* ===== Otto: удобная типографика для телефона ===== */
 
-@layer base {
+  /* ===== Otto: удобная типографика для телефона ===== */
   body {
     font-size: 17px;
     line-height: 1.55;
@@ -93,6 +92,7 @@
   }
 }
 
+@layer base {
   button,
   textarea {
     font: inherit;
@@ -101,6 +101,67 @@
   button {
     touch-action: manipulation;
   }
+}
+
+/*
+ * Единый цвет тренажёра.
+ * Dashboard (главный экран) не получает .trainer-blue, поэтому его оформление
+ * остаётся без изменений. Внутри тренажёра старые amber/teal/rose CTA-кнопки
+ * визуально приводятся к тому же sky-blue, что используется в Hören.
+ */
+.trainer-blue button.bg-amber-600,
+.trainer-blue button.bg-teal-600,
+.trainer-blue button.bg-rose-600,
+.trainer-blue button.bg-amber-500,
+.trainer-blue button.bg-teal-500,
+.trainer-blue button.bg-rose-500 {
+  background-color: rgb(2 132 199) !important;
+  border-color: rgb(2 132 199) !important;
+  color: white !important;
+}
+
+.trainer-blue button.bg-amber-600:hover,
+.trainer-blue button.bg-teal-600:hover,
+.trainer-blue button.bg-rose-600:hover,
+.trainer-blue button.bg-amber-500:hover,
+.trainer-blue button.bg-teal-500:hover,
+.trainer-blue button.bg-rose-500:hover {
+  background-color: rgb(3 105 161) !important;
+  border-color: rgb(3 105 161) !important;
+}
+
+.trainer-blue button.bg-amber-50,
+.trainer-blue button.bg-teal-50,
+.trainer-blue button.bg-rose-50 {
+  background-color: rgb(240 249 255) !important;
+  border-color: rgb(186 230 253) !important;
+  color: rgb(3 105 161) !important;
+}
+
+.trainer-blue button.bg-amber-50:hover,
+.trainer-blue button.bg-teal-50:hover,
+.trainer-blue button.bg-rose-50:hover {
+  background-color: rgb(224 242 254) !important;
+  border-color: rgb(125 211 252) !important;
+  color: rgb(3 105 161) !important;
+}
+
+.trainer-blue button.text-amber-700,
+.trainer-blue button.text-teal-700,
+.trainer-blue button.text-rose-700,
+.trainer-blue button.text-amber-600,
+.trainer-blue button.text-teal-600,
+.trainer-blue button.text-rose-600 {
+  color: rgb(3 105 161) !important;
+}
+
+.trainer-blue button.border-amber-200,
+.trainer-blue button.border-teal-200,
+.trainer-blue button.border-rose-200,
+.trainer-blue button.border-amber-300,
+.trainer-blue button.border-teal-300,
+.trainer-blue button.border-rose-300 {
+  border-color: rgb(186 230 253) !important;
 }
 
 .telegram-app {
