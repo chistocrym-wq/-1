@@ -93,11 +93,12 @@ function sanitizeResult(result, points) {
   const aiPoints = Array.isArray(result?.points) ? result.points : [];
   const normalizedPoints = sourcePoints.map((point, index) => {
     const item = aiPoints[index] || {};
+    const score = clampHalf(item.score, 3);
     return {
       point,
-      score: clampHalf(item.score, 3),
+      score,
       max: 3,
-      covered: Boolean(item.covered) && clampHalf(item.score, 3) > 0,
+      covered: score > 0,
       evidence: typeof item.evidence === 'string' ? item.evidence : '',
     };
   });
@@ -121,9 +122,10 @@ function sanitizeResult(result, points) {
   return {
     transcription: typeof result?.transcription === 'string' ? result.transcription : '',
     normalizedText: typeof result?.normalizedText === 'string' ? result.normalizedText : '',
+    score: trainerScore,
+    trainerScore,
     goetheScore: rawScore,
     goetheMax: rawMax,
-    trainerScore,
     passed: trainerScore >= 60,
     wordCount,
     criteria: {
@@ -132,7 +134,7 @@ function sanitizeResult(result, points) {
         max: normalizedPoints.length * 3,
         comment: typeof criteria.taskCompletion?.comment === 'string' ? criteria.taskCompletion.comment : '',
       },
-      communicativeDesign: {
+      format: {
         score: designScore,
         max: 1,
         comment: typeof criteria.communicativeDesign?.comment === 'string' ? criteria.communicativeDesign.comment : '',
@@ -210,6 +212,6 @@ export default async function handler(req, res) {
     return jsonResponse(res, 200, sanitizeResult(result, points));
   } catch (error) {
     console.error('check-schreiben error', error);
-    return jsonResponse(res, 500, { error: 'Die KI-Prüfung konnte nicht durchgeführt werden.' });
+    return jsonResponse(res, 500, { error: 'Die KI-Prüfung konnte nicht выполнена.' });
   }
 }
