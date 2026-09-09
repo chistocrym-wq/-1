@@ -44,25 +44,26 @@ SCORING:
 A1 LANGUAGE:
 - Accept natural simple A1 German. Do not demand B1/B2 vocabulary or grammar.
 - Exact model wording is NOT required. Equivalent natural A1 expressions are correct.
-- For a language error, explain it briefly but do not present it as a lost content point when meaning is clear.
+- Do not invent an error just because a sentence can be phrased more elegantly. Correct A1 alternatives must be accepted.
 
 CORRECTIONS — VERY IMPORTANT:
-- Return ONLY things that actually need changing or adding.
-- Never list correct sentences, correct phrases, completed points or generic praise as corrections.
-- Maximum 6 corrections. Keep every correction short.
-- For a language correction: original = learner wording, corrected = natural German A1 wording, explanation = short Russian explanation.
-- For a missing task point: original = "Не выполнено", corrected = a short German A1 phrase that would fulfill the point, explanation = Russian explanation of what must be added.
-- Every correction must contain a useful German phrase/turn of phrase in corrected and a clear Russian explanation.
-- Do not invent errors.
+- Return ONLY things that actually need changing or adding. Never list correct sentences or generic praise.
+- Maximum 6 corrections. Keep them short and concrete.
+- ORIGINAL MUST BE A VERBATIM QUOTE from the learner answer. Copy the exact word(s), phrase or sentence as written, including its spelling/case/article/ending when relevant. NEVER paraphrase the learner's error and NEVER invent an original that is not present in the answer.
+- CORRECTED MUST show the natural correct A1 German version of exactly that quoted part. Do not rewrite unrelated correct text.
+- EXPLANATION MUST state WHY it is wrong and HOW to use the corrected form. Give the German grammar/phrase name when useful, then explain in simple Russian. Example: "Verbzweitstellung: Im Hauptsatz steht das konjugierte Verb auf Position 2. Здесь ...".
+- For a missing task point, original = "Не выполнено", corrected = a short natural German A1 phrase that would fulfill the point, explanation = exactly what information is missing and what to add.
+- Do not call stylistic preferences errors.
+- If a language error does not make the task information unclear, it is a learning correction and DOES NOT reduce the content-point score. Explicitly say this in Russian: "Это языковая ошибка, но в этой тренировке она не снижает баллы, если смысл понятен и пункт задания выполнен. Для экзамена слово/форма должны быть написаны правильно."
+- Never show a correction for something that is already correct.
 
 FEEDBACK — VERY IMPORTANT:
 - Be concise, warm and friendly, like Otto helping a learner.
-- Start with a short German assessment, then Russian assessment.
-- Include one useful German A1 phrase/turn of phrase and its Russian meaning when there is something to improve.
+- First give the score explanation in BOTH languages. Use this compact pattern: "Bewertung: X/100. Inhalt: A/B Punkte. Kommunikationsgestaltung: C/1 Punkt. / Оценка: X/100. Содержание: A/B баллов. Оформление: C/1 балл." Then say in one short sentence whether the task was passed.
+- After the score, give only the important corrections/learning points; do not repeat correct parts.
+- Include a useful German A1 phrase/turn of phrase with Russian meaning when it helps.
 - Finish with one short encouraging sentence in Russian.
-- Do not repeat the whole learner text.
-- Do not praise every correct part.
-- Target about 2–5 short sentences total.
+- Target about 3–6 short sentences total. No long essay.
 
 IMAGE:
 - If an image is supplied, first transcribe the handwritten German. Never invent unreadable text; use [unleserlich].
@@ -123,9 +124,17 @@ function sanitize(result, sourcePoints) {
   const wordCount = countWords(countedText);
   const enoughWords = wordCount >= 30;
   const corrections = Array.isArray(result?.corrections) ? result.corrections.slice(0, 6).filter(c => c && (c.original || c.corrected || c.explanation)) : [];
+  const contentEarned = points.reduce((sum, point) => sum + point.score, 0);
+  const contentMaximum = points.length * 3;
+  const contentRu = `${contentEarned}/${contentMaximum}`;
+  const designRu = `${design}/1`;
   let feedback = typeof result?.feedback === 'string' ? result.feedback.trim() : '';
-  if (!feedback) feedback = score >= 60 ? 'Bewertung: Gut gemacht! / Оценка: задание выполнено хорошо. Так держать!' : 'Bewertung: Weiter üben. / Оценка: задание стоит немного доработать. Ты справишься!';
-  if (!enoughWords) feedback += `\nВ ответе ${wordCount} слов — нужно минимум 30.`;
+  const scoreIntro = `Bewertung: ${score}/100. Inhalt: ${contentRu} Punkte. Kommunikationsgestaltung: ${designRu} Punkt(e). / Оценка: ${score}/100. Содержание: ${contentRu} баллов. Оформление: ${designRu} балл(а).`;
+  const passLine = score >= 60 && enoughWords
+    ? 'Bestanden: Die Aufgabe ist bestanden. / Зачёт: задание выполнено достаточно хорошо.'
+    : 'Noch üben: Ein paar Punkte kannst du noch verbessern. / Ещё немного практики: некоторые пункты стоит доработать.';
+  feedback = `${scoreIntro} ${passLine}${feedback ? ` ${feedback}` : ''}`;
+  if (!enoughWords) feedback += ` В ответе ${wordCount} слов — нужно минимум 30.`;
 
   return {
     transcription,
