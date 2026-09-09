@@ -1,5 +1,82 @@
 const MODEL = process.env.OPENAI_MODEL || 'gpt-5';
 
+const RESPONSE_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['transcription', 'normalizedText', 'goetheScore', 'goetheMax', 'trainerScore', 'passed', 'wordCount', 'criteria', 'points', 'corrections', 'strengths', 'feedback'],
+  properties: {
+    transcription: { type: 'string' },
+    normalizedText: { type: 'string' },
+    goetheScore: { type: 'number' },
+    goetheMax: { type: 'number' },
+    trainerScore: { type: 'number' },
+    passed: { type: 'boolean' },
+    wordCount: { type: 'number' },
+    criteria: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['taskCompletion', 'communicativeDesign', 'communicativeSuccess', 'grammar', 'vocabulary', 'spelling'],
+      properties: {
+        taskCompletion: {
+          type: 'object', additionalProperties: false,
+          required: ['score', 'max', 'comment'],
+          properties: { score: { type: 'number' }, max: { type: 'number' }, comment: { type: 'string' } }
+        },
+        communicativeDesign: {
+          type: 'object', additionalProperties: false,
+          required: ['score', 'max', 'comment'],
+          properties: { score: { type: 'number' }, max: { type: 'number' }, comment: { type: 'string' } }
+        },
+        communicativeSuccess: {
+          type: 'object', additionalProperties: false,
+          required: ['score', 'max', 'comment'],
+          properties: { score: { type: 'number' }, max: { type: 'number' }, comment: { type: 'string' } }
+        },
+        grammar: {
+          type: 'object', additionalProperties: false,
+          required: ['score', 'max', 'comment'],
+          properties: { score: { type: 'number' }, max: { type: 'number' }, comment: { type: 'string' } }
+        },
+        vocabulary: {
+          type: 'object', additionalProperties: false,
+          required: ['score', 'max', 'comment'],
+          properties: { score: { type: 'number' }, max: { type: 'number' }, comment: { type: 'string' } }
+        },
+        spelling: {
+          type: 'object', additionalProperties: false,
+          required: ['score', 'max', 'comment'],
+          properties: { score: { type: 'number' }, max: { type: 'number' }, comment: { type: 'string' } }
+        }
+      }
+    },
+    points: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['point', 'score', 'max', 'covered', 'evidence'],
+        properties: {
+          point: { type: 'string' },
+          score: { type: 'number' },
+          max: { type: 'number' },
+          covered: { type: 'boolean' },
+          evidence: { type: 'string' }
+        }
+      }
+    },
+    corrections: {
+      type: 'array',
+      items: {
+        type: 'object', additionalProperties: false,
+        required: ['original', 'corrected', 'explanation'],
+        properties: { original: { type: 'string' }, corrected: { type: 'string' }, explanation: { type: 'string' } }
+      }
+    },
+    strengths: { type: 'array', items: { type: 'string' } },
+    feedback: { type: 'string' }
+  }
+};
+
 const SYSTEM_PROMPT = `You are the German writing evaluator for an original Goethe-Zertifikat A1 training app. Evaluate only the supplied task and learner answer. Never demand B1/B2.
 
 SCORING:
@@ -30,7 +107,7 @@ FEEDBACK:
 - Clearly distinguish a language error from an error that costs points.
 - If an image is supplied, transcribe handwritten German first; never invent unreadable text, use [unleserlich].
 
-Return ONLY valid JSON: {"transcription":"","normalizedText":"","goetheScore":0,"goetheMax":10,"trainerScore":0,"passed":false,"wordCount":0,"criteria":{"taskCompletion":{"score":0,"max":0,"comment":""},"communicativeDesign":{"score":0,"max":1,"comment":""},"communicativeSuccess":{"score":0,"max":20,"comment":""},"grammar":{"score":0,"max":15,"comment":""},"vocabulary":{"score":0,"max":10,"comment":""},"spelling":{"score":0,"max":10,"comment":""}},"points":[{"point":"","score":0,"max":3,"covered":false,"evidence":""}],"corrections":[{"original":"","corrected":"","explanation":""}],"strengths":[""],"feedback":""}`;
+Return the evaluation using the supplied structured JSON schema. Do not omit required fields.`;
 
 function send(res, status, data) {
   res.status(status).setHeader('Content-Type', 'application/json');
@@ -104,7 +181,7 @@ export default async function handler(req, res) {
     if (typeof text === 'string' && text.length > 10000) return send(res, 413, { error: 'Text is too long.' });
     if (typeof image === 'string' && image.length > 3000000) return send(res, 413, { error: 'Фото слишком большое. Загрузите более компактное фото.' });
 
-    const taskText = ['TASK SITUATION:', String(task), '', 'REQUIRED POINTS:', ...points.map((p, i) => `${i + 1}. ${String(p)}`), '', 'MINIMUM WORD COUNT: 30 words.', '', 'Evaluate the learner answer and return JSON only.'].join('\n');
+    const taskText = ['TASK SITUATION:', String(task), '', 'REQUIRED POINTS:', ...points.map((p, i) => `${i + 1}. ${String(p)}`), '', 'MINIMUM WORD COUNT: 30 words.', '', 'Evaluate the learner answer.'].join('\n');
     const content = [{ type: 'input_text', text: taskText }];
     if (image) content.push({ type: 'input_image', image_url: image });
     else content.push({ type: 'input_text', text: `LEARNER ANSWER:\n${String(text)}` });
@@ -119,7 +196,15 @@ export default async function handler(req, res) {
           { role: 'system', content: [{ type: 'input_text', text: SYSTEM_PROMPT }] },
           { role: 'user', content }
         ],
-        max_output_tokens: 1400
+        text: {
+          format: {
+            type: 'json_schema',
+            name: 'a1_writing_evaluation',
+            strict: true,
+            schema: RESPONSE_SCHEMA
+          }
+        },
+        max_output_tokens: 1800
       })
     });
     const data = await response.json();
