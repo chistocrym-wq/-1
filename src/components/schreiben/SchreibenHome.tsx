@@ -1,4 +1,4 @@
-import { BarChart3, ChevronRight, Eye, FileText, PenLine } from 'lucide-react';
+import { BarChart3, ChevronRight, FileText, PenLine } from 'lucide-react';
 import { useSchreibenProgress } from '@/hooks/useSchreibenProgress';
 import { cn } from '@/lib/utils';
 
@@ -32,13 +32,6 @@ export function SchreibenHome({ onStartTeil1, onStartTeil2 }: SchreibenHomeProps
           Trainieren Sie zwei Formate: Formulare ausfüllen und kurze persönliche oder offizielle Briefe schreiben.
           Jede Aufgabe wird einzeln bewertet und Ihr Fortschritt bleibt gespeichert.
         </p>
-        <button
-          type="button"
-          className="mt-4 flex items-center gap-2 text-sm font-semibold text-amber-700"
-          onClick={() => window.alert('Der russische Übersetzungstext wird später über das Augen-Symbol eingeblendet.')}
-        >
-          <Eye className="h-4 w-4" /> Russische Übersetzung
-        </button>
       </div>
 
       <SchreibenCard
@@ -49,7 +42,7 @@ export function SchreibenHome({ onStartTeil1, onStartTeil2 }: SchreibenHomeProps
         progress={Math.min(teil1.progress.totalCompleted, teil1Total)}
         dailyCompleted={teil1.progress.dailyCompleted}
         averageToday={teil1.averageToday}
-        active={false}
+        active
         onStart={onStartTeil1}
         icon={FileText}
         badge="30 Aufgaben"
