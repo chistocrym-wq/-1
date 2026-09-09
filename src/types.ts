@@ -19,5 +19,5 @@ export interface LesenTeil2Option { type: LesenTeil2VisualType; title: string; t
 export interface ReadingTeil2Task { id: string; title: string; situation: string; options: { a: LesenTeil2Option; b: LesenTeil2Option }; correctAnswer: 'a' | 'b'; }
 export type SchreibenFieldType = 'text' | 'number' | 'date' | 'time' | 'select' | 'radio' | 'checkbox';
 export interface SchreibenFormField { id: string; label: string; labelRu?: string; type: SchreibenFieldType; value?: string; options?: string[]; answer: string; editable?: boolean; }
-export interface SchreibenTeil1Task { id: string; title: string; situation: string; situationRu?: string; formTitle: string; formSubtitle?: string; instruction: string; fields: SchreibenFormField[]; }
+export interface SchreibenTeil1Task { id: string; title: string; situation: string; situationRu?: string; formTitle: string; formSubtitle?: string; instruction?: string; fields: SchreibenFormField[]; }
 export interface SchreibenTeil2Task { id: string; title: string; situation: string; situationRu?: string; points: string[]; pointsRu?: string[]; minWords: number; maxWords: number; }
