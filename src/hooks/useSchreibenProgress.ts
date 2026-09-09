@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { getLocalDateKey } from '@/lib/date';
 
 export interface SchreibenProgressState {
   nextIndex: number;
@@ -8,7 +9,7 @@ export interface SchreibenProgressState {
   updatedAt: string;
 }
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => getLocalDateKey();
 const keyFor = (teil: 1 | 2) => `otto-schreiben-teil${teil}-progress-v1`;
 
 const empty = (): SchreibenProgressState => ({ nextIndex: 0, totalCompleted: 0, dailyCompleted: 0, dailyScores: [], updatedAt: today() });
