@@ -8,9 +8,10 @@ import { ListeningModule } from '@/components/modules/ListeningModule';
 import { SpeakingModule } from '@/components/modules/SpeakingModule';
 import { useProgress } from '@/hooks/useProgress';
 import { LesenHome } from '@/components/lesen/LesenHome';
-import { SchreibenHome } from '@/components/SchreibenHome';
+import { SchreibenHome } from '@/components/schreiben/SchreibenHome';
 import { SchreibenTeil1Runner } from '@/components/schreiben/SchreibenTeil1Runner';
-import { SchreibenTeil2Runner } from '@/components/schreiben/SchreibenTeil2Runner';
+import { SchreibenTeil2 } from '@/components/schreiben/SchreibenTeil2';
+import { schreibenTeil2Tasks } from '@/data/schreiben/teil2';
 import type { ModuleId } from '@/types';
 import { Teil2Runner } from '@/components/lesen/Teil2Runner';
 import { lesenTeil2Tasks } from '@/data/lesen/teil2';
@@ -61,7 +62,7 @@ export default function App() {
     {view === 'lesen' && lesenScreen === 'teil2' && <Teil2Runner tasks={lesenTeil2Tasks} onBack={() => setLesenScreen('home')} onComplete={handleComplete('lesen')} />}
     {view === 'schreiben' && schreibenScreen === 'home' && <SchreibenHome onStartTeil1={() => setSchreibenScreen('teil1')} onStartTeil2={() => setSchreibenScreen('teil2')} />}
     {view === 'schreiben' && schreibenScreen === 'teil1' && <SchreibenTeil1Runner onBack={() => setSchreibenScreen('home')} />}
-    {view === 'schreiben' && schreibenScreen === 'teil2' && <SchreibenTeil2Runner onBack={() => setSchreibenScreen('home')} />}
+    {view === 'schreiben' && schreibenScreen === 'teil2' && <SchreibenTeil2 tasks={schreibenTeil2Tasks} onBack={() => setSchreibenScreen('home')} />}
     {view === 'horen' && <ListeningModule onBack={handleBack} onComplete={handleComplete('horen')} />}
     {view === 'sprechen' && <SpeakingModule onBack={handleBack} onComplete={handleComplete('sprechen')} />}
   </div></div>;
