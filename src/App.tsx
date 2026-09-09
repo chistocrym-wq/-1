@@ -5,27 +5,30 @@ import { ExamGuide } from '@/components/ExamGuide';
 import { MockExam } from '@/components/MockExam';
 import { ReadingModule } from '@/components/modules/ReadingModule';
 import { ListeningModule } from '@/components/modules/ListeningModule';
-import { WritingModule } from '@/components/modules/WritingModule';
 import { SpeakingModule } from '@/components/modules/SpeakingModule';
 import { useProgress } from '@/hooks/useProgress';
 import { LesenHome } from '@/components/lesen/LesenHome';
+import { SchreibenHome } from '@/components/SchreibenHome';
+import { SchreibenTeil1Runner } from '@/components/schreiben/SchreibenTeil1Runner';
+import { SchreibenTeil2Runner } from '@/components/schreiben/SchreibenTeil2Runner';
 import type { ModuleId } from '@/types';
 import { Teil2Runner } from '@/components/lesen/Teil2Runner';
 import { lesenTeil2Tasks } from '@/data/lesen/teil2';
 
 type View = ModuleId | 'instructions' | 'exam-guide' | 'mock-exam' | null;
+type SchreibenScreen = 'home' | 'teil1' | 'teil2';
 
 export default function App() {
   const [view, setView] = useState<View>(null);
-  const [lesenScreen, setLesenScreen] = useState<
-  'home' | 'teil1' | 'teil2'
->('home');
+  const [lesenScreen, setLesenScreen] = useState<'home' | 'teil1' | 'teil2'>('home');
+  const [schreibenScreen, setSchreibenScreen] = useState<SchreibenScreen>('home');
   const { progress, recordScore, markCompleted } = useProgress();
 
   const handleBack = useCallback(() => {
-  setLesenScreen('home');
-  setView(null);
-}, []);
+    setLesenScreen('home');
+    setSchreibenScreen('home');
+    setView(null);
+  }, []);
 
   useEffect(() => {
     const telegram = window.Telegram?.WebApp;
@@ -37,73 +40,29 @@ export default function App() {
   useEffect(() => {
     const backButton = window.Telegram?.WebApp.BackButton;
     if (!backButton) return;
-
-    if (view === null) {
-      backButton.hide();
-      return;
-    }
-
+    if (view === null) { backButton.hide(); return; }
     backButton.show();
     backButton.onClick(handleBack);
-    return () => {
-      backButton.offClick(handleBack);
-    };
+    return () => backButton.offClick(handleBack);
   }, [handleBack, view]);
 
   const handleComplete = (mod: ModuleId) => (score: number, total: number) => {
-    if (mod === 'sprechen') {
-      markCompleted(mod, total);
-    } else {
-      recordScore(mod, score, total);
-    }
+    if (mod === 'sprechen') markCompleted(mod, total);
+    else recordScore(mod, score, total);
   };
 
-  return (
-    <div className="telegram-app min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10">
-        {view === null && (
-          <Dashboard
-            onSelectModule={(mod) => setView(mod)}
-            onOpenInstructions={() => setView('instructions')}
-            onOpenExamGuide={() => setView('exam-guide')}
-            onOpenMockExam={() => setView('mock-exam')}
-            progress={progress}
-          />
-        )}
-        {view === 'instructions' && <Instructions onBack={handleBack} />}
-        {view === 'exam-guide' && <ExamGuide onBack={handleBack} />}
-        {view === 'mock-exam' && <MockExam onBack={handleBack} />}
-        {view === 'lesen' && lesenScreen === 'home' && (
-  <LesenHome
-    onStartTeil1={() => setLesenScreen('teil1')}
-    onStartTeil2={() => setLesenScreen('teil2')}
-  />
-)}
-
-{view === 'lesen' && lesenScreen === 'teil1' && (
-  <ReadingModule
-    onBack={() => setLesenScreen('home')}
-    onComplete={handleComplete('lesen')}
-  />
-)}
-
-{view === 'lesen' && lesenScreen === 'teil2' && (
-  <Teil2Runner
-    tasks={lesenTeil2Tasks}
-    onBack={() => setLesenScreen('home')}
-    onComplete={handleComplete('lesen')}
-  />
-)}
-        {view === 'horen' && (
-          <ListeningModule onBack={handleBack} onComplete={handleComplete('horen')} />
-        )}
-        {view === 'schreiben' && (
-          <WritingModule onBack={handleBack} onComplete={handleComplete('schreiben')} />
-        )}
-        {view === 'sprechen' && (
-          <SpeakingModule onBack={handleBack} onComplete={handleComplete('sprechen')} />
-        )}
-      </div>
-    </div>
-  );
+  return <div className="telegram-app min-h-screen bg-slate-50"><div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10">
+    {view === null && <Dashboard onSelectModule={(mod) => { setView(mod); if (mod === 'schreiben') setSchreibenScreen('home'); }} onOpenInstructions={() => setView('instructions')} onOpenExamGuide={() => setView('exam-guide')} onOpenMockExam={() => setView('mock-exam')} progress={progress} />}
+    {view === 'instructions' && <Instructions onBack={handleBack} />}
+    {view === 'exam-guide' && <ExamGuide onBack={handleBack} />}
+    {view === 'mock-exam' && <MockExam onBack={handleBack} />}
+    {view === 'lesen' && lesenScreen === 'home' && <LesenHome onStartTeil1={() => setLesenScreen('teil1')} onStartTeil2={() => setLesenScreen('teil2')} />}
+    {view === 'lesen' && lesenScreen === 'teil1' && <ReadingModule onBack={() => setLesenScreen('home')} onComplete={handleComplete('lesen')} />}
+    {view === 'lesen' && lesenScreen === 'teil2' && <Teil2Runner tasks={lesenTeil2Tasks} onBack={() => setLesenScreen('home')} onComplete={handleComplete('lesen')} />}
+    {view === 'schreiben' && schreibenScreen === 'home' && <SchreibenHome onStartTeil1={() => setSchreibenScreen('teil1')} onStartTeil2={() => setSchreibenScreen('teil2')} />}
+    {view === 'schreiben' && schreibenScreen === 'teil1' && <SchreibenTeil1Runner onBack={() => setSchreibenScreen('home')} />}
+    {view === 'schreiben' && schreibenScreen === 'teil2' && <SchreibenTeil2Runner onBack={() => setSchreibenScreen('home')} />}
+    {view === 'horen' && <ListeningModule onBack={handleBack} onComplete={handleComplete('horen')} />}
+    {view === 'sprechen' && <SpeakingModule onBack={handleBack} onComplete={handleComplete('sprechen')} />}
+  </div></div>;
 }
