@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { ArrowLeft, CheckCircle2, Trophy, RotateCcw, Mic, Square, Eye, Clock, Play, Send, Loader2, AlertCircle, Volume2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Trophy, RotateCcw, Mic, Square, Eye, Clock, Play, Send, Loader2, AlertCircle, Volume2, X } from 'lucide-react';
 import { speakingTasks } from '@/data/speaking';
 import { cn } from '@/lib/utils';
 
@@ -32,6 +32,7 @@ export function SpeakingModule({ onBack, onComplete }: SpeakingModuleProps) {
   const [currentTask, setCurrentTask] = useState(0);
   const [selectedPrompt, setSelectedPrompt] = useState(0);
   const [showSample, setShowSample] = useState(false);
+  const [showSecrets, setShowSecrets] = useState(false);
   const [finished, setFinished] = useState(false);
   const [practiced, setPracticed] = useState<boolean[]>(() => speakingTasks.map(() => false));
   const [scores, setScores] = useState<number[]>(() => speakingTasks.map(() => 0));
@@ -114,7 +115,7 @@ export function SpeakingModule({ onBack, onComplete }: SpeakingModuleProps) {
         ))}
       </div>
 
-      <div className="rounded-xl p-4 mb-6 bg-rose-50 border border-rose-200">
+      <div className="rounded-xl p-4 mb-3 bg-rose-50 border border-rose-200">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h3 className="font-semibold text-rose-700 mb-1">{task.title}</h3>
@@ -125,15 +126,34 @@ export function SpeakingModule({ onBack, onComplete }: SpeakingModuleProps) {
       </div>
 
       {task.type === 'introduction' ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 mb-4">
-          <h4 className="font-semibold text-slate-900 mb-2">Erzählen Sie etwas über sich</h4>
-          <p className="text-sm text-slate-500 mb-4">Говорите свободно. Отто проверит, какие важные пункты вы назвали.</p>
-          <div className="flex flex-wrap gap-2">
-            {['Name', 'Herkunft', 'Beruf', 'Freizeit', 'Sprachen'].map((label, index) => (
-              <span key={label} className="text-sm px-3 py-2 rounded-full bg-rose-50 border border-rose-100 text-rose-700">{index + 1}. {label}</span>
+        <>
+          <div className="flex items-center justify-end mb-2">
+            <button
+              type="button"
+              onClick={() => setShowSecrets(true)}
+              className="text-xs sm:text-sm font-medium text-slate-500 hover:text-rose-700 transition-colors px-2 py-1"
+            >
+              Секреты сдачи
+            </button>
+          </div>
+
+          <div className="border border-slate-300 bg-white mb-4 overflow-hidden">
+            {task.prompts.map((prompt, index) => (
+              <div
+                key={prompt}
+                className={cn(
+                  'min-h-[58px] sm:min-h-[64px] flex items-center justify-center px-4 text-center text-lg sm:text-xl font-medium text-slate-800',
+                  index !== 0 && 'border-t border-slate-300'
+                )}
+              >
+                {prompt}
+              </div>
             ))}
           </div>
-        </div>
+
+          {/* Пустой блок Отто — место зарезервировано для следующего этапа. */}
+          <div className="border border-slate-300 bg-white h-24 mb-4" aria-label="Otto" />
+        </>
       ) : (
         <div className="rounded-2xl border border-slate-200 bg-white p-5 mb-4">
           <h4 className="font-semibold text-slate-900 mb-3">Wählen Sie ein Thema</h4>
@@ -184,6 +204,16 @@ export function SpeakingModule({ onBack, onComplete }: SpeakingModuleProps) {
           {currentTask < speakingTasks.length - 1 ? <><span>Следующее задание</span><ArrowLeft className="w-4 h-4 rotate-180" /></> : <><CheckCircle2 className="w-4 h-4" /> Завершить модуль</>}
         </button>
       </div>
+
+      {showSecrets && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4" onMouseDown={() => setShowSecrets(false)}>
+          <div className="relative w-full max-w-md h-64 bg-white border border-slate-300" onMouseDown={(event) => event.stopPropagation()}>
+            <button type="button" onClick={() => setShowSecrets(false)} aria-label="Закрыть" className="absolute right-2 top-2 p-2 text-slate-500 hover:text-slate-800">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
