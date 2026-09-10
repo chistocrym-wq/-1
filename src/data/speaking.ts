@@ -11,11 +11,11 @@ export const speakingTasks: SpeakingTask[] = [
       'Alter?',
       'Land?',
       'Wohnort?',
-      'Schule?',
+      'Beruf?',
       'Sprachen?',
       'Hobby?',
     ],
-    keywords: ['Name', 'Alter', 'Land', 'Wohnort', 'Schule', 'Sprachen', 'Hobby'],
+    keywords: ['Name', 'Alter', 'Land', 'Wohnort', 'Beruf', 'Sprachen', 'Hobby'],
   },
   {
     id: 'sprechen-2',
