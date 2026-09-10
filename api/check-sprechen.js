@@ -1,5 +1,5 @@
-const TRANSCRIBE_MODEL = 'whisper-1';
-const FALLBACK_TRANSCRIBE_MODEL = 'gpt-4o-mini-transcribe';
+const TRANSCRIBE_MODEL = 'gpt-4o-mini-transcribe';
+const FALLBACK_TRANSCRIBE_MODEL = 'whisper-1';
 const EVALUATION_MODEL = 'gpt-4o-mini';
 const MAX_AUDIO_BASE64 = 4000000;
 const MAX_DURATION_SECONDS = 90;
@@ -7,29 +7,18 @@ const MAX_DURATION_SECONDS = 90;
 const RESPONSE_SCHEMA = {
   type: 'object',
   additionalProperties: false,
-  required: ['contentScore', 'covered', 'missing', 'language', 'feedback'],
+  required: ['pointResults', 'feedback'],
   properties: {
-    contentScore: { type: 'number' },
-    covered: { type: 'array', items: { type: 'string' } },
-    missing: { type: 'array', items: { type: 'string' } },
-    language: {
-      type: 'object',
-      additionalProperties: false,
-      required: ['score', 'corrections'],
-      properties: {
-        score: { type: 'number' },
-        corrections: {
-          type: 'array',
-          items: {
-            type: 'object',
-            additionalProperties: false,
-            required: ['original', 'corrected', 'explanation'],
-            properties: {
-              original: { type: 'string' },
-              corrected: { type: 'string' },
-              explanation: { type: 'string' }
-            }
-          }
+    pointResults: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['point', 'status', 'evidence'],
+        properties: {
+          point: { type: 'string' },
+          status: { type: 'string', enum: ['full', 'partial', 'missing'] },
+          evidence: { type: 'string' }
         }
       }
     },
@@ -37,28 +26,37 @@ const RESPONSE_SCHEMA = {
   }
 };
 
-const SYSTEM_PROMPT = `You are Otto, a friendly Goethe A1 speaking trainer.
-Evaluate only the learner's spoken German transcript against the supplied task.
+const SYSTEM_PROMPT = `You are Otto, a Goethe A1 SPEAKING trainer.
+Your job is to check whether the learner actually said all required information aloud.
 
-CONTENT:
-- Check whether each required point is clearly communicated.
-- Do not require exact model wording. Natural simple A1 German is accepted.
-- Do not penalize a point if the grammar is imperfect but the intended information is understandable.
-- contentScore is 0-100 and should mainly reflect task completion.
+THIS IS SPEAKING, NOT WRITING.
+- The transcript is only a technical transcription of spoken audio.
+- NEVER judge spelling, capitalization, punctuation, written endings or written word forms.
+- NEVER return spelling corrections.
+- Do not give a language/grammar score.
+- Do not invent pronunciation mistakes from the transcript.
 
-LANGUAGE:
-- Give a language score from 0-100 for understandable A1 German.
-- Accept normal A1 mistakes if communication remains clear.
-- Return at most 4 real corrections.
-- original must be copied exactly from the transcript. Never invent or paraphrase it.
-- corrected must be a natural simple A1 version.
-- explanation must be short, with the German grammar/phrase term when useful and a simple Russian explanation.
+TASK COVERAGE:
+- Check EVERY required point separately, one by one.
+- A point is FULL only when the learner clearly said the required information.
+- PARTIAL when the learner gave related information but the required point is incomplete or unclear.
+- MISSING when the learner did not say the required information.
+- Natural A1 wording is accepted. Exact template wording is NOT required.
+- Do not require extra information that is not in the required points.
+- evidence must be a very short description in Russian of what was actually heard that supports the status. Do not quote or correct spelling.
 
-IMPORTANT:
-- Do not claim that a pronunciation error is proven by the transcript alone.
-- The speech recognizer is used for transcription. If no confidence value is available, do not invent one.
-- Keep feedback short, friendly and encouraging. Start with German, then Russian.
-- Return only structured JSON.`;
+IMPORTANT FOR THE INTRODUCTION TASK:
+The points may be labels such as Name?, Alter?, Land?, Wohnort?, Schule?, Sprachen?, Hobby?.
+Interpret each label semantically: the learner must say the corresponding personal information aloud.
+
+FEEDBACK:
+- Mention the number of completed points and the missing/partial points.
+- Start with a short German sentence, then Russian.
+- Keep it encouraging and concise.
+- Do not discuss spelling or written German.
+- Do not claim a precise phonetic pronunciation score; pronunciation/clarity is estimated separately from speech-recognition confidence.
+
+Return only structured JSON.`;
 
 function send(res, status, data) {
   res.status(status).setHeader('Content-Type', 'application/json');
@@ -105,45 +103,32 @@ function confidenceFromLogprobs(logprobs) {
 function confidenceLabel(confidence) {
   if (confidence === null) return {
     level: 'unknown',
-    title: 'Понятность речи',
-    note: 'Текст успешно распознан. Отдельный фонетический балл здесь не выставляется.'
+    title: 'Понятность речи не удалось оценить отдельно',
+    note: 'Речь распознана, но отдельного сигнала для оценки понятности нет.'
   };
-  if (confidence >= 72) return {
+  if (confidence >= 82) return {
     level: 'good',
-    title: 'Речь распознана уверенно',
-    note: 'Хороший ориентир: слова в записи в основном распознаются уверенно.'
+    title: 'Речь распознаётся уверенно',
+    note: 'Слова в записи в основном распознаются уверенно. Это ориентир по понятности записи, а не оценка орфографии.'
   };
-  if (confidence >= 50) return {
+  if (confidence >= 62) return {
     level: 'attention',
-    title: 'Есть слова для повторения',
-    note: 'Некоторые фрагменты распознаны неуверенно. Попробуйте говорить чуть медленнее и чётче.'
+    title: 'Есть фрагменты, которые распознаются неуверенно',
+    note: 'Попробуйте говорить чуть медленнее, чётче и ближе к микрофону. Это не проверка написания слов.'
   };
   return {
     level: 'low',
-    title: 'Понятность стоит потренировать',
+    title: 'Понятность речи стоит потренировать',
     note: 'Распознавание было неуверенным. Повторите ответ в тихом месте, чуть медленнее и чётче.'
   };
 }
 
 function detectAudioContainer(buffer, suppliedMime) {
-  // Prefer the actual bytes over the browser-reported MIME. This prevents a
-  // WebM file from being uploaded to OpenAI with a misleading .wav filename.
-  if (buffer.length >= 12 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WAVE') {
-    return { mime: 'audio/wav', extension: 'wav' };
-  }
-  if (buffer.length >= 4 && buffer.toString('ascii', 0, 4) === 'OggS') {
-    return { mime: 'audio/ogg', extension: 'ogg' };
-  }
-  if (buffer.length >= 4 && buffer[0] === 0x1a && buffer[1] === 0x45 && buffer[2] === 0xdf && buffer[3] === 0xa3) {
-    return { mime: 'audio/webm', extension: 'webm' };
-  }
-  if (buffer.length >= 8 && buffer.toString('ascii', 4, 8) === 'ftyp') {
-    return { mime: suppliedMime?.includes('m4a') ? 'audio/m4a' : 'audio/mp4', extension: suppliedMime?.includes('m4a') ? 'm4a' : 'mp4' };
-  }
-  if (buffer.length >= 3 && buffer.toString('ascii', 0, 3) === 'ID3') {
-    return { mime: 'audio/mpeg', extension: 'mp3' };
-  }
-  // Last resort: trust the browser MIME, but keep it consistent with the name.
+  if (buffer.length >= 12 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WAVE') return { mime: 'audio/wav', extension: 'wav' };
+  if (buffer.length >= 4 && buffer.toString('ascii', 0, 4) === 'OggS') return { mime: 'audio/ogg', extension: 'ogg' };
+  if (buffer.length >= 4 && buffer[0] === 0x1a && buffer[1] === 0x45 && buffer[2] === 0xdf && buffer[3] === 0xa3) return { mime: 'audio/webm', extension: 'webm' };
+  if (buffer.length >= 8 && buffer.toString('ascii', 4, 8) === 'ftyp') return { mime: suppliedMime?.includes('m4a') ? 'audio/m4a' : 'audio/mp4', extension: suppliedMime?.includes('m4a') ? 'm4a' : 'mp4' };
+  if (buffer.length >= 3 && buffer.toString('ascii', 0, 3) === 'ID3') return { mime: 'audio/mpeg', extension: 'mp3' };
   const mime = typeof suppliedMime === 'string' && suppliedMime.includes('/') ? suppliedMime.split(';')[0] : 'audio/webm';
   const extension = mime.includes('mp4') ? 'mp4' : mime.includes('mpeg') || mime.includes('mpga') ? 'mp3' : mime.includes('wav') ? 'wav' : mime.includes('m4a') ? 'm4a' : mime.includes('ogg') ? 'ogg' : 'webm';
   return { mime, extension };
@@ -188,21 +173,21 @@ export default async function handler(req, res) {
     if (!audioBuffer.length) return send(res, 400, { error: 'Audio data is empty.' });
 
     const container = detectAudioContainer(audioBuffer, mimeType);
-
     let transcriptionData;
     let transcriptionResponse;
     let confidence = null;
 
     ({ response: transcriptionResponse, data: transcriptionData } = await transcribe(
-      buildTranscriptionForm(audioBuffer, container, TRANSCRIBE_MODEL, false)
+      buildTranscriptionForm(audioBuffer, container, TRANSCRIBE_MODEL, true)
     ));
 
-    if (!transcriptionResponse.ok) {
-      console.warn('Whisper transcription failed, retrying with gpt-4o-mini-transcribe:', transcriptionData?.error?.message);
+    if (transcriptionResponse.ok) {
+      confidence = confidenceFromLogprobs(transcriptionData?.logprobs);
+    } else {
+      console.warn('gpt-4o-mini-transcribe failed, retrying with whisper-1:', transcriptionData?.error?.message);
       ({ response: transcriptionResponse, data: transcriptionData } = await transcribe(
-        buildTranscriptionForm(audioBuffer, container, FALLBACK_TRANSCRIBE_MODEL, true)
+        buildTranscriptionForm(audioBuffer, container, FALLBACK_TRANSCRIBE_MODEL, false)
       ));
-      if (transcriptionResponse.ok) confidence = confidenceFromLogprobs(transcriptionData?.logprobs);
     }
 
     if (!transcriptionResponse.ok) {
@@ -212,11 +197,10 @@ export default async function handler(req, res) {
     const transcription = typeof transcriptionData?.text === 'string' ? transcriptionData.text.trim() : '';
     if (!transcription) return send(res, 422, { error: 'Речь не удалось распознать. Попробуйте записать ответ ещё раз, ближе к микрофону.' });
 
-    const clarity = confidenceLabel(confidence);
     const taskText = [
       'TASK:', String(task),
       '', 'REQUIRED POINTS:', ...points.map((point, index) => `${index + 1}. ${String(point)}`),
-      '', 'LEARNER TRANSCRIPT:', transcription
+      '', 'LEARNER SPOKEN TRANSCRIPT (technical transcription of speech; do not treat it as written text):', transcription
     ].join('\n');
 
     const evaluationResponse = await fetch('https://api.openai.com/v1/responses', {
@@ -235,12 +219,12 @@ export default async function handler(req, res) {
         text: {
           format: {
             type: 'json_schema',
-            name: 'a1_speaking_evaluation',
+            name: 'a1_speaking_task_coverage',
             strict: true,
             schema: RESPONSE_SCHEMA
           }
         },
-        max_output_tokens: 1800
+        max_output_tokens: 1600
       })
     });
     const evaluationData = await evaluationResponse.json();
@@ -250,19 +234,35 @@ export default async function handler(req, res) {
     const output = outputText(evaluationData);
     if (!output) return send(res, 502, { error: 'Otto вернул пустой результат. Попробуйте ещё раз.' });
     const result = parseJson(output);
-    const contentScore = clamp(result?.contentScore, 0, 100);
-    const languageScore = clamp(result?.language?.score, 0, 100);
-    const overallScore = Math.round(contentScore * 0.7 + languageScore * 0.3);
-    const corrections = Array.isArray(result?.language?.corrections) ? result.language.corrections.slice(0, 4) : [];
+
+    const pointResults = points.map((point, index) => {
+      const found = Array.isArray(result?.pointResults)
+        ? result.pointResults.find((item) => String(item?.point || '').trim().toLowerCase() === String(point).trim().toLowerCase())
+          || result.pointResults[index]
+        : null;
+      const status = ['full', 'partial', 'missing'].includes(found?.status) ? found.status : 'missing';
+      return {
+        point: String(point),
+        status,
+        evidence: typeof found?.evidence === 'string' ? found.evidence : ''
+      };
+    });
+
+    const earnedUnits = pointResults.reduce((sum, item) => sum + (item.status === 'full' ? 1 : item.status === 'partial' ? 0.5 : 0), 0);
+    const contentScore = points.length ? Math.round((earnedUnits / points.length) * 100) : 0;
+    const covered = pointResults.filter((item) => item.status === 'full').map((item) => item.point);
+    const partial = pointResults.filter((item) => item.status === 'partial').map((item) => item.point);
+    const missing = pointResults.filter((item) => item.status === 'missing').map((item) => item.point);
+    const clarity = confidenceLabel(confidence);
 
     return send(res, 200, {
       transcription,
       contentScore,
-      languageScore,
-      overallScore,
-      covered: Array.isArray(result?.covered) ? result.covered : [],
-      missing: Array.isArray(result?.missing) ? result.missing : [],
-      corrections,
+      overallScore: contentScore,
+      pointResults,
+      covered,
+      partial,
+      missing,
       feedback: typeof result?.feedback === 'string' ? result.feedback : '',
       pronunciation: {
         confidence,
