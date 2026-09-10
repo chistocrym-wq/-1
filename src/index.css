@@ -11,9 +11,8 @@
   textarea, input { font:inherit; }
 }
 
-.telegram-app { min-height:var(--tg-viewport-stable-height,100vh); padding-top:max(env(safe-area-inset-top),var(--tg-content-safe-area-inset-top,0px)); padding-right:max(env(safe-area-inset-right),var(--tg-content-safe-area-inset-right,0px)); padding-bottom:max(env(safe-area-inset-bottom),var(--tg-content-safe-area-inset-bottom,0px)); padding-left:max(env(safe-area-inset-left),var(--tg-content-safe-area-inset-left,0px)); }
+.telegram-app { min-height:var(--tg-viewport-stable-height,100vh); padding-top:max(env(safe-area-inset-top),var(--tg-content-safe-area-inset-top,0px)); padding-right:max(env(tg-content-safe-area-inset-right,0px),var(--tg-content-safe-area-inset-right,0px)); padding-bottom:max(env(safe-area-inset-bottom),var(--tg-content-safe-area-inset-bottom,0px)); padding-left:max(env(safe-area-inset-left),var(--tg-content-safe-area-inset-left,0px)); }
 
-/* HOME */
 .otto-home { max-width:1080px; margin:0 auto; padding:5px 0 34px; }
 .otto-topbar { min-height:54px; display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:14px; }
 .otto-brand { display:flex; align-items:center; gap:10px; }
@@ -25,7 +24,6 @@
 .otto-language-option { width:100%; min-height:38px; display:flex; align-items:center; justify-content:space-between; padding:0 9px; border:0; border-radius:9px; background:transparent; color:#475569; font-size:12px; text-align:left; }
 .otto-language-option:hover,.otto-language-option.is-active { background:#f3f5f7; color:var(--otto-blue); }
 
-/* Main Otto banner — keep the recognizable turquoise color from the reference */
 .otto-hero { position:relative; min-height:310px; overflow:hidden; display:flex; align-items:center; justify-content:space-between; gap:24px; padding:30px 38px 25px; border:1px solid #0d8179; border-radius:28px; background:#118d84; box-shadow:0 16px 42px rgba(35,51,68,.12),inset 0 1px 0 rgba(255,255,255,.16); }
 .otto-hero-glow { position:absolute; width:350px; height:350px; right:80px; top:-175px; border-radius:50%; background:rgba(255,255,255,.08); filter:blur(8px); }
 .otto-hero-copy { position:relative; z-index:1; max-width:600px; }
@@ -35,10 +33,9 @@
 .otto-character-wrap { position:relative; z-index:1; width:285px; min-width:250px; align-self:stretch; display:flex; align-items:center; justify-content:center; padding-bottom:30px; }
 .otto-character-ring { position:absolute; width:235px; height:235px; border-radius:50%; background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.30) 0,rgba(255,255,255,.14) 65%,rgba(255,255,255,.06) 100%); box-shadow:0 14px 32px rgba(0,47,44,.12); }
 .otto-character { position:relative; z-index:2; width:245px; height:245px; object-fit:contain; filter:drop-shadow(0 13px 17px rgba(0,40,38,.20)); }
-.otto-character-label { position:absolute; z-index:3; right:4px; bottom:0; display:flex; flex-direction:column; align-items:flex-start; gap:1px; padding:0; border:0; border-radius:0; background:transparent; box-shadow:none; text-align:left; }
-.otto-character-label strong { color:#fff; font-size:12px; line-height:1.2; }
-.otto-character-label span { color:rgba(255,255,255,.72); font-size:9px; line-height:1.2; }
-
+.otto-character-label { position:absolute; z-index:3; right:50%; transform:translateX(50%); bottom:4px; width:100%; display:flex; flex-direction:column; align-items:center; gap:2px; padding:0; border:0; border-radius:0; background:transparent; box-shadow:none; text-align:center; pointer-events:none; }
+.otto-character-label strong { color:#fff; font-size:14px; line-height:1.2; font-weight:800; text-shadow:0 1px 3px rgba(0,40,38,.28); }
+.otto-character-label span { color:rgba(255,255,255,.86); font-size:10px; line-height:1.2; font-weight:600; text-shadow:0 1px 3px rgba(0,40,38,.24); }
 .otto-section { margin-top:25px; }
 .otto-section-heading { display:flex; align-items:end; justify-content:space-between; gap:12px; margin:0 3px 11px; }
 .otto-section-kicker { display:block; margin-bottom:2px; color:#9a7a32; font-size:9px; font-weight:850; letter-spacing:.17em; }
@@ -51,8 +48,6 @@
 .otto-quick-card strong { display:block; font-size:13px; font-weight:800; line-height:1.2; }
 .otto-quick-card small { display:block; margin-top:3px; color:#7a8795; font-size:10px; line-height:1.3; }
 .otto-card-arrow { width:16px; height:16px; flex:0 0 auto; color:#94a3b8; }
-
-/* Exam modules — left aligned, icon first, with soft individual colors */
 .otto-module-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
 .otto-module-card { min-width:0; min-height:174px; display:flex; flex-direction:column; align-items:stretch; padding:18px; border:1px solid #e2e7eb; border-radius:19px; background:#fff; text-align:left; box-shadow:0 7px 24px rgba(30,41,59,.055); transition:.2s ease; }
 .otto-module-card:hover { transform:translateY(-2px); box-shadow:0 14px 32px rgba(30,41,59,.09); }
@@ -71,13 +66,15 @@
 .otto-module-bottom > div { flex:1; }
 .otto-module-arrow { width:17px; height:17px; color:#9aa7b4; }
 
-/* SCHREIBEN */
 .schreiben-home { max-width:820px; margin:0 auto; padding-bottom:28px; }
 .schreiben-heading { display:flex; align-items:center; gap:10px; margin-bottom:17px; }
 .schreiben-heading-icon { width:40px; height:40px; display:grid; place-items:center; border-radius:12px; background:#f7f0df; color:#80672d; }
 .schreiben-heading span { display:block; color:#7b8794; font-size:10px; line-height:1.1; }
 .schreiben-heading h1 { margin:2px 0 0; font-size:25px; line-height:1.05; font-weight:820; text-transform:uppercase; }
 .schreiben-translate-button { margin-left:auto; min-height:38px; display:inline-flex; align-items:center; gap:6px; padding:0 10px; border:1px solid #e2ddd1; border-radius:10px; background:#fff; color:#80672d; font-size:12px; font-weight:700; }
+.schreiben-inline-translate { width:34px; height:34px; min-height:34px; display:inline-flex; align-items:center; justify-content:center; padding:0; border:1px solid #e2ddd1; border-radius:9px; background:#fff; color:#80672d; flex:0 0 34px; }
+.schreiben-inline-translate:hover { background:#faf7ef; }
+.schreiben-text-with-eye { display:flex; align-items:center; justify-content:space-between; gap:10px; }
 .schreiben-intro,.schreiben-part-card,.schreiben-stat-info { border:1px solid #e2e0db; border-radius:18px; background:#fff; box-shadow:0 6px 20px rgba(30,41,59,.045); }
 .schreiben-intro { padding:17px; margin-bottom:12px; }
 .schreiben-intro-top { display:flex; align-items:center; justify-content:space-between; color:#80672d; }
@@ -103,7 +100,6 @@
 .schreiben-stat-info { display:flex; align-items:flex-start; gap:11px; padding:14px 16px; color:#80672d; }
 .schreiben-stat-info strong { display:block; color:var(--otto-ink); font-size:13px; line-height:1.25; }
 .schreiben-stat-info p { margin:4px 0 0; color:#687584; font-size:11px; line-height:1.4; }
-
 .otto-question-text,.otto-reading-text,.otto-exercise-text { font-size:17px; line-height:1.45; }
 .otto-answer-button,.otto-primary-button { min-height:50px; font-size:16px; line-height:1.3; }
 
@@ -123,7 +119,7 @@
   .otto-hero p { font-size:14px; }
   .otto-character-wrap { width:100%; min-width:0; height:210px; padding-bottom:0; }
   .otto-character,.otto-character-ring { width:190px; height:190px; }
-  .otto-character-label { right:50%; transform:translateX(50%); bottom:0; align-items:center; text-align:center; }
+  .otto-character-label { right:50%; transform:translateX(50%); bottom:0; width:100%; align-items:center; text-align:center; }
   .otto-quick-grid,.otto-module-grid { grid-template-columns:1fr; }
   .otto-quick-card { min-height:72px; }
   .otto-module-card { min-height:0; }
