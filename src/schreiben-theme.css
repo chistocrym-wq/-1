@@ -1,0 +1,102 @@
+.schreiben-shell {
+  background: #f3f1ec !important;
+}
+
+.schreiben-shell > .mx-auto {
+  max-width: 860px !important;
+}
+
+.schreiben-shell .animate-fade-in {
+  color: #10243f;
+}
+
+.schreiben-shell .rounded-2xl {
+  border-color: #e2e0db !important;
+  border-radius: 18px !important;
+  box-shadow: 0 6px 20px rgba(30,41,59,.045) !important;
+}
+
+.schreiben-shell .bg-white { background: #fff !important; }
+.schreiben-shell .bg-slate-50 { background: #f8f7f3 !important; }
+.schreiben-shell .bg-slate-100 { background: #f0efeb !important; }
+.schreiben-shell .text-slate-900,
+.schreiben-shell .text-slate-800 { color: #10243f !important; }
+.schreiben-shell .text-slate-700,
+.schreiben-shell .text-slate-600 { color: #566476 !important; }
+.schreiben-shell .text-slate-500 { color: #7b8794 !important; }
+
+.schreiben-shell .bg-sky-50 { background: #faf7ef !important; }
+.schreiben-shell .border-sky-200 { border-color: #e2ddd1 !important; }
+.schreiben-shell .border-sky-300,
+.schreiben-shell .border-sky-400 { border-color: #d1ae5b !important; }
+.schreiben-shell .text-sky-600,
+.schreiben-shell .text-sky-700 { color: #80672d !important; }
+.schreiben-shell .bg-sky-600 { background: #c69b3c !important; }
+.schreiben-shell .bg-sky-600:hover { background: #b38b32 !important; }
+.schreiben-shell .bg-sky-500 { background: #c69b3c !important; }
+.schreiben-shell .border-sky-600 { border-color: #c69b3c !important; }
+
+.schreiben-shell input,
+.schreiben-shell textarea {
+  border-color: #dfdcd5 !important;
+  border-radius: 11px !important;
+  background: #fff !important;
+  color: #10243f !important;
+  box-shadow: none !important;
+}
+
+.schreiben-shell input:focus,
+.schreiben-shell textarea:focus {
+  border-color: #c69b3c !important;
+  box-shadow: 0 0 0 3px rgba(198,155,60,.12) !important;
+  outline: none !important;
+}
+
+.schreiben-shell .bg-amber-600,
+.schreiben-shell .bg-amber-500 { background: #c69b3c !important; }
+.schreiben-shell .bg-amber-600:hover { background: #b38b32 !important; }
+.schreiben-shell .text-amber-700,
+.schreiben-shell .text-amber-600 { color: #80672d !important; }
+.schreiben-shell .border-amber-200 { border-color: #e2ddd1 !important; }
+.schreiben-shell .bg-amber-50 { background: #faf7ef !important; }
+
+.schreiben-shell button[class*="px-5"][class*="py-3"] {
+  min-height: 44px;
+  border-radius: 11px !important;
+  font-size: 13px !important;
+  font-weight: 750 !important;
+  box-shadow: none !important;
+}
+
+/* Russian UI labels for action buttons, while leaving answer-choice buttons untouched. */
+.schreiben-shell button[class*="w-full"][class*="px-5"][class*="py-3"]:has(.lucide-check-circle-2) {
+  font-size: 0 !important;
+}
+.schreiben-shell button[class*="w-full"][class*="px-5"][class*="py-3"]:has(.lucide-check-circle-2)::after {
+  content: "Проверить";
+  font-size: 13px;
+}
+.schreiben-shell button[class*="px-5"][class*="py-3"]:not([class*="w-full"]):has(.lucide-check-circle-2) {
+  font-size: 0 !important;
+}
+.schreiben-shell button[class*="px-5"][class*="py-3"]:not([class*="w-full"]):has(.lucide-check-circle-2)::after {
+  content: "Следующее задание";
+  font-size: 13px;
+}
+.schreiben-shell button[class*="px-5"][class*="py-3"]:has(.lucide-arrow-left) {
+  font-size: 0 !important;
+}
+.schreiben-shell button[class*="px-5"][class*="py-3"]:has(.lucide-arrow-left)::after {
+  content: "Назад к Schreiben";
+  font-size: 13px;
+}
+
+@media (max-width:640px) {
+  .schreiben-shell > .mx-auto { padding-left: 13px !important; padding-right: 13px !important; }
+  .schreiben-shell .rounded-2xl { border-radius: 15px !important; }
+  .schreiben-shell .p-5 { padding: 14px !important; }
+  .schreiben-shell .p-6 { padding: 15px !important; }
+  .schreiben-shell .mb-6 { margin-bottom: 13px !important; }
+  .schreiben-shell .mb-5 { margin-bottom: 11px !important; }
+  .schreiben-shell .space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: 8px !important; }
+}
