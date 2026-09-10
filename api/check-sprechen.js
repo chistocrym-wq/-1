@@ -1,5 +1,5 @@
-const TRANSCRIBE_MODEL = 'gpt-4o-mini-transcribe';
-const FALLBACK_TRANSCRIBE_MODEL = 'whisper-1';
+const TRANSCRIBE_MODEL = 'whisper-1';
+const FALLBACK_TRANSCRIBE_MODEL = 'gpt-4o-mini-transcribe';
 const EVALUATION_MODEL = 'gpt-4o-mini';
 const MAX_AUDIO_BASE64 = 4000000;
 const MAX_DURATION_SECONDS = 90;
@@ -56,7 +56,7 @@ LANGUAGE:
 
 IMPORTANT:
 - Do not claim that a pronunciation error is proven by the transcript alone.
-- The separate speech-recognition confidence is only an orientation for clarity/pronunciation. Do not use it to invent linguistic corrections.
+- The speech recognizer is used for transcription. If no confidence value is available, do not invent one.
 - Keep feedback short, friendly and encouraging. Start with German, then Russian.
 - Return only structured JSON.`;
 
@@ -103,15 +103,32 @@ function confidenceFromLogprobs(logprobs) {
 }
 
 function confidenceLabel(confidence) {
-  if (confidence === null) return { level: 'unknown', title: 'Проверка понятности недоступна', note: 'Текст распознан, но дополнительный показатель уверенности не вернулся.' };
-  if (confidence >= 72) return { level: 'good', title: 'Речь распознана уверенно', note: 'Хороший ориентир: слова в записи в основном распознаются уверенно.' };
-  if (confidence >= 50) return { level: 'attention', title: 'Есть слова для повторения', note: 'Некоторые фрагменты распознаны неуверенно. Попробуйте говорить чуть медленнее и чётче.' };
-  return { level: 'low', title: 'Понятность стоит потренировать', note: 'Распознавание было неуверенным. Повторите ответ в тихом месте, чуть медленнее и чётче.' };
+  if (confidence === null) return {
+    level: 'unknown',
+    title: 'Понятность речи',
+    note: 'Текст успешно распознан. Отдельный фонетический балл здесь не выставляется.'
+  };
+  if (confidence >= 72) return {
+    level: 'good',
+    title: 'Речь распознана уверенно',
+    note: 'Хороший ориентир: слова в записи в основном распознаются уверенно.'
+  };
+  if (confidence >= 50) return {
+    level: 'attention',
+    title: 'Есть слова для повторения',
+    note: 'Некоторые фрагменты распознаны неуверенно. Попробуйте говорить чуть медленнее и чётче.'
+  };
+  return {
+    level: 'low',
+    title: 'Понятность стоит потренировать',
+    note: 'Распознавание было неуверенным. Повторите ответ в тихом месте, чуть медленнее и чётче.'
+  };
 }
 
 function buildTranscriptionForm(audioBuffer, safeMime, extension, model, includeLogprobs = false) {
   const form = new FormData();
-  form.append('file', new Blob([audioBuffer], { type: safeMime }), `sprechen.${extension}`);
+  const file = new File([audioBuffer], `sprechen.${extension}`, { type: safeMime });
+  form.append('file', file);
   form.append('model', model);
   form.append('language', 'de');
   form.append('response_format', 'json');
@@ -146,29 +163,41 @@ export default async function handler(req, res) {
     const audioBuffer = Buffer.from(rawBase64, 'base64');
     if (!audioBuffer.length) return send(res, 400, { error: 'Audio data is empty.' });
 
-    // MediaRecorder on Android/Chrome commonly produces WebM/Opus. The new
-    // transcription models are stricter about some WebM files, so try the
-    // cheap/current model first and transparently fall back to Whisper only
-    // when the file is rejected. This keeps the normal path inexpensive while
-    // preventing a valid browser recording from becoming a dead end.
-    const safeMime = typeof mimeType === 'string' && mimeType.includes('/') ? mimeType.split(';')[0] : 'audio/webm';
-    const extension = safeMime.includes('mp4') ? 'mp4' : safeMime.includes('mpeg') ? 'mp3' : safeMime.includes('wav') ? 'wav' : safeMime.includes('ogg') ? 'ogg' : 'webm';
+    // Send the browser's original MediaRecorder file. Do not decode/re-encode it
+    // in the browser: on some phones that can create a WAV that plays locally
+    // but is rejected by the transcription API. Whisper is deliberately first
+    // because it is the most tolerant MVP path for WebM/Opus and is inexpensive.
+    const safeMime = typeof mimeType === 'string' && mimeType.includes('/')
+      ? mimeType.split(';')[0]
+      : 'audio/webm';
+    const extension = safeMime.includes('mp4')
+      ? 'mp4'
+      : safeMime.includes('mpeg') || safeMime.includes('mpga')
+        ? 'mp3'
+        : safeMime.includes('wav')
+          ? 'wav'
+          : safeMime.includes('m4a')
+            ? 'm4a'
+            : safeMime.includes('ogg')
+              ? 'ogg'
+              : 'webm';
 
     let transcriptionData;
     let transcriptionResponse;
     let confidence = null;
 
     ({ response: transcriptionResponse, data: transcriptionData } = await transcribe(
-      buildTranscriptionForm(audioBuffer, safeMime, extension, TRANSCRIBE_MODEL, true)
+      buildTranscriptionForm(audioBuffer, safeMime, extension, TRANSCRIBE_MODEL, false)
     ));
 
+    // If Whisper rejects the browser file, retry the same bytes with the newer
+    // transcribe model. No client-side conversion is involved in either path.
     if (!transcriptionResponse.ok) {
-      console.warn('Primary transcription failed, retrying with whisper-1:', transcriptionData?.error?.message);
+      console.warn('Whisper transcription failed, retrying with gpt-4o-mini-transcribe:', transcriptionData?.error?.message);
       ({ response: transcriptionResponse, data: transcriptionData } = await transcribe(
-        buildTranscriptionForm(audioBuffer, safeMime, extension, FALLBACK_TRANSCRIBE_MODEL, false)
+        buildTranscriptionForm(audioBuffer, safeMime, extension, FALLBACK_TRANSCRIBE_MODEL, true)
       ));
-    } else {
-      confidence = confidenceFromLogprobs(transcriptionData?.logprobs);
+      if (transcriptionResponse.ok) confidence = confidenceFromLogprobs(transcriptionData?.logprobs);
     }
 
     if (!transcriptionResponse.ok) {
