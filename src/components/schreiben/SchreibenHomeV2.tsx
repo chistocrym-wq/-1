@@ -41,13 +41,32 @@ export function SchreibenHomeV2({ onStartTeil1, onStartTeil2 }: Props) {
       <div className="schreiben-heading">
         <div className="schreiben-heading-icon"><PenLine className="h-5 w-5" /></div>
         <div><span>Goethe-Zertifikat A1</span><h1>Schreiben</h1></div>
-        <button type="button" onClick={() => setShowRussian(!showRussian)} className="schreiben-translate-button" aria-label="Показать перевод"><Eye className="h-4 w-4" /> Русский</button>
+        <button
+          type="button"
+          onClick={() => setShowRussian(!showRussian)}
+          className="schreiben-translate-button"
+          aria-label={showRussian ? 'Скрыть перевод' : 'Показать перевод'}
+          title={showRussian ? 'Скрыть перевод' : 'Показать перевод'}
+        >
+          <Eye className="h-4 w-4" />
+        </button>
       </div>
 
       <section className="schreiben-intro">
-        <div className="schreiben-intro-top"><h2>Schreiben — письменная часть</h2><Eye className="h-4 w-4" /></div>
+        <div className="schreiben-intro-top">
+          <h2>Schreiben — письменная часть</h2>
+          <button
+            type="button"
+            onClick={() => setShowRussian(!showRussian)}
+            className="schreiben-translate-button schreiben-inline-translate"
+            aria-label={showRussian ? 'Скрыть перевод' : 'Показать перевод'}
+            title={showRussian ? 'Скрыть перевод' : 'Показать перевод'}
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+        </div>
         <p>Модуль состоит из двух частей: в Teil 1 вы заполняете формуляры, в Teil 2 пишете короткие письма и сообщения. В обоих разделах важно внимательно понять ситуацию и выполнить все требуемые пункты.</p>
-        {showRussian && <div className="schreiben-russian-box">Русский перевод: Письменная часть экзамена состоит из двух частей. Сначала вы переносите нужные сведения в формуляр, затем пишете короткое сообщение или письмо. Здесь можно тренироваться, видеть результат и сохранять статистику.</div>}
+        {showRussian && <div className="schreiben-russian-box">Письменная часть экзамена состоит из двух частей. Сначала вы переносите нужные сведения в формуляр, затем пишете короткое сообщение или письмо. Здесь можно тренироваться, видеть результат и сохранять статистику.</div>}
       </section>
 
       <Card title="Formulare" text="Прочитайте ситуацию и перенесите пять важных сведений в формуляр. После каждого задания Отто покажет результат." total={30} progress={Math.min(p1.progress.totalCompleted, 30)} today={p1.progress.dailyCompleted} average={p1.averageToday} onStart={onStartTeil1} icon={FileText} />
