@@ -80,8 +80,8 @@
 .schreiben-russian-box { margin-top:10px; padding:10px 12px; border-left:3px solid #d1ae5b; border-radius:8px; background:#faf7ef; color:#5d6672; font-size:13px; line-height:1.4; }
 .schreiben-part-card { position:relative; padding:19px; margin-bottom:12px; text-align:center; }
 .schreiben-part-icon { width:46px; height:46px; margin:0 auto 8px; display:grid; place-items:center; border-radius:13px; background:#f7f0df; color:#80672d; }
-.schreiben-part-card h2 { margin:0; color:var(--otto-ink); font-size:21px; line-height:1.1; font-weight:800; }
-.schreiben-part-text { max-width:640px; margin:7px auto 13px; color:#5e6b7a; font-size:13px; line-height:1.42; }
+.schreiben-part-card h2 { margin:0; color:var(--otto-ink); font-size:21px; line-height:1.1; font-weight:800; text-align:left; }
+.schreiben-part-text { max-width:640px; margin:7px auto 13px; color:#5e6b7a; font-size:13px; line-height:1.42; text-align:left; }
 .schreiben-stat-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:7px; }
 .schreiben-stat-grid > div { padding:9px 7px; border-radius:11px; background:#f6f7f7; }
 .schreiben-stat-grid span,.schreiben-stat-grid small { display:block; color:#87919c; font-size:9px; line-height:1.2; }
@@ -110,54 +110,25 @@
   body { font-size:16px; }
   p,li,label,textarea,input { font-size:16px; line-height:1.45; }
   button { min-height:48px; font-size:16px; }
-  .telegram-app > .mx-auto { padding-left:13px !important; padding-right:13px !important; padding-top:10px !important; }
-  .otto-home { padding-bottom:20px; }
-  .otto-topbar { margin-bottom:10px; }
-  .otto-language-button { min-height:36px; font-size:11px; }
-  .otto-hero { display:grid; grid-template-columns:minmax(0,1fr) 125px; gap:5px; padding:20px 15px 15px; border-radius:21px; }
-  .otto-eyebrow { padding:5px 8px; font-size:8px; }
-  .otto-hero h1 { margin:10px 0 7px; font-size:29px; }
-  .otto-hero p { font-size:12px; line-height:1.4; }
-  .otto-character-wrap { width:125px; min-width:125px; height:175px; padding-bottom:26px; }
-  .otto-character,.otto-character-ring { width:128px; height:128px; }
-  .otto-character-label { right:0; bottom:0; }
-  .otto-character-label strong { font-size:9px; }
-  .otto-character-label span { font-size:7px; }
-  .otto-section { margin-top:20px; }
-  .otto-section-heading h2 { font-size:20px; }
-  .otto-quick-grid { grid-template-columns:1fr; gap:8px; }
-  .otto-quick-card { min-height:68px; padding:10px 12px; border-radius:14px; }
-  .otto-quick-icon { width:38px; height:38px; flex-basis:38px; }
-  .otto-module-grid { grid-template-columns:1fr; gap:9px; }
-  .otto-module-card { min-height:150px; padding:15px; border-radius:16px; }
-  .otto-module-icon { width:44px; height:44px; }
-  .otto-module-card strong { font-size:18px; }
-  .otto-module-card p { margin:8px auto; font-size:11px; }
-
+  .telegram-app > .mx-auto { padding-left:13px !important; padding-right:13px !important; }
+  .otto-hero { min-height:0; padding:21px 17px 8px; flex-direction:column; text-align:center; gap:2px; }
+  .otto-hero-copy { max-width:none; }
+  .otto-hero h1 { font-size:34px; }
+  .otto-hero p { font-size:14px; }
+  .otto-character-wrap { width:100%; min-width:0; height:210px; padding-bottom:0; }
+  .otto-character,.otto-character-ring { width:190px; height:190px; }
+  .otto-character-label { right:50%; transform:translateX(50%); bottom:0; align-items:center; text-align:center; }
+  .otto-quick-grid,.otto-module-grid { grid-template-columns:1fr; }
+  .otto-quick-card { min-height:72px; }
+  .otto-module-card { min-height:0; }
   .schreiben-heading { margin-bottom:13px; }
   .schreiben-heading h1 { font-size:22px; }
-  .schreiben-intro,.schreiben-part-card,.schreiben-stat-info { border-radius:15px; }
   .schreiben-intro { padding:14px; }
-  .schreiben-intro h2 { font-size:16px; }
   .schreiben-intro p { font-size:13px; }
-  .schreiben-part-card { padding:15px 12px; }
-  .schreiben-part-card h2 { font-size:20px; }
-  .schreiben-part-text { font-size:12px; }
-  .schreiben-stat-grid { grid-template-columns:repeat(2,1fr); }
+  .schreiben-part-card { padding:15px; }
+  .schreiben-part-card h2 { font-size:19px; }
+  .schreiben-part-text { font-size:13px; }
+  .schreiben-stat-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .schreiben-part-actions { flex-direction:column; }
   .schreiben-main-button,.schreiben-secondary-button { width:100%; }
 }
-
-@layer utilities {
-  .animate-fade-in { animation:fadeIn .35s ease-out; }
-  .animate-slide-up { animation:slideUp .4s ease-out; }
-  .animate-scale-in { animation:scaleIn .25s ease-out; }
-  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-  @keyframes slideUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-  @keyframes scaleIn { from{opacity:0;transform:scale(.97)} to{opacity:1;transform:scale(1)} }
-}
-
-@media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important; } }
-::-webkit-scrollbar { width:7px; }
-::-webkit-scrollbar-track { background:#eef1f3; }
-::-webkit-scrollbar-thumb { background:#cbd2d8; border-radius:99px; }
