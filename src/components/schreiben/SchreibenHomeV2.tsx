@@ -5,31 +5,26 @@ import { SchreibenSecrets } from '@/components/schreiben/SchreibenSecrets';
 
 interface Props { onStartTeil1: () => void; onStartTeil2: () => void; }
 
-function Card({ number, title, text, total, progress, today, average, onStart, icon: Icon, onSecrets }: { number: string; title: string; text: string; total: number; progress: number; today: number; average: number | null; onStart: () => void; icon: typeof FileText; onSecrets?: () => void }) {
+function Card({ title, text, total, progress, today, average, onStart, icon: Icon, onSecrets }: {
+  title: string; text: string; total: number; progress: number; today: number; average: number | null;
+  onStart: () => void; icon: typeof FileText; onSecrets?: () => void;
+}) {
   const percent = Math.min((progress / total) * 100, 100);
   return (
-    <section className="mb-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-start gap-4">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-lg font-bold text-amber-700">{number}</div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-amber-700">TEIL {number}</p>
-              <h2 className="mt-1 text-lg font-bold text-slate-900">{title}</h2>
-            </div>
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">{total} Aufgaben</span>
-          </div>
-          <p className="mt-2 text-sm leading-6 text-slate-500">{text}</p>
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <div className="rounded-xl bg-slate-50 p-3"><div className="text-xs text-slate-400">Heute</div><div className="mt-1 text-base font-bold text-slate-900">{today}</div><div className="text-xs text-slate-500">gemacht</div></div>
-            <div className="rounded-xl bg-slate-50 p-3"><div className="text-xs text-slate-400">Ø heute</div><div className="mt-1 text-base font-bold text-amber-700">{average === null ? '—' : `${average}%`}</div><div className="text-xs text-slate-500">Punktzahl</div></div>
-          </div>
-          <div className="mt-4"><div className="mb-1 flex items-center justify-between text-xs text-slate-500"><span>Fortschritt</span><span>{progress} / {total}</span></div><div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-amber-500 transition-all" style={{ width: `${percent}%` }} /></div></div>
-          <div className="mt-5 flex flex-col gap-2 sm:flex-row">
-            <button type="button" onClick={onStart} className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-amber-600 px-5 py-3 text-base font-semibold text-white transition-all hover:bg-amber-700"><Icon className="h-4 w-4" /> TRAINING STARTEN <ChevronRight className="h-4 w-4" /></button>
-            {onSecrets && <button type="button" onClick={onSecrets} className="flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl border-2 border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-800 transition-all hover:border-amber-300 hover:bg-amber-100"><Lightbulb className="h-4 w-4" /> Секреты успеха написания писем</button>}
-          </div>
-        </div>
+    <section className="schreiben-part-card">
+      <div className="schreiben-part-icon"><Icon className="h-5 w-5" /></div>
+      <h2>{title}</h2>
+      <p className="schreiben-part-text">{text}</p>
+      <div className="schreiben-stat-grid">
+        <div><span>Сегодня</span><strong>{today}</strong><small>выполнено</small></div>
+        <div><span>Средний балл</span><strong>{average === null ? '—' : `${average}%`}</strong><small>за сегодня</small></div>
+        <div><span>Всего выполнено</span><strong>{progress}</strong><small>из {total}</small></div>
+        <div><span>Прогресс</span><strong>{Math.round(percent)}%</strong><small>по разделу</small></div>
+      </div>
+      <div className="schreiben-progress-line"><div style={{ width: `${percent}%` }} /></div>
+      <div className="schreiben-part-actions">
+        <button type="button" onClick={onStart} className="schreiben-main-button"><Icon className="h-4 w-4" /> Тренироваться <ChevronRight className="h-4 w-4" /></button>
+        {onSecrets && <button type="button" onClick={onSecrets} className="schreiben-secondary-button"><Lightbulb className="h-4 w-4" /> Секреты успеха написания писем</button>}
       </div>
     </section>
   );
@@ -37,14 +32,32 @@ function Card({ number, title, text, total, progress, today, average, onStart, i
 
 export function SchreibenHomeV2({ onStartTeil1, onStartTeil2 }: Props) {
   const [secretsOpen, setSecretsOpen] = useState(false);
-  const p1 = useSchreibenProgress(1, 30); const p2 = useSchreibenProgress(2, 80);
+  const [showRussian, setShowRussian] = useState(false);
+  const p1 = useSchreibenProgress(1, 30);
+  const p2 = useSchreibenProgress(2, 80);
+
   return (
-    <div className="animate-fade-in">
-      <div className="mb-6 flex items-center gap-3"><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50"><PenLine className="h-5 w-5 text-amber-700" /></div><div><p className="text-sm text-slate-500">Goethe-Zertifikat A1</p><h1 className="text-2xl font-bold text-slate-900">SCHREIBEN</h1></div></div>
-      <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><h2 className="mb-3 text-base font-bold text-slate-900">Informationen zur Prüfung</h2><p className="text-[16px] leading-7 text-slate-700">Das Modul besteht aus zwei Teilen. In Teil 1 füllen Sie Prüfungsformulare aus. In Teil 2 schreiben Sie kurze Briefe und Nachrichten.</p><div className="mt-4 flex items-center gap-2 text-sm font-semibold text-amber-700"><Eye className="h-4 w-4" /> Schreiben Sie kurze, klare Sätze auf A1-Niveau.</div></div>
-      <Card number="1" title="Formulare" text="Lesen Sie eine ausführliche Situation und übertragen Sie fünf wichtige Informationen in einen gedruckten Prüfungsbogen." total={30} progress={Math.min(p1.progress.totalCompleted,30)} today={p1.progress.dailyCompleted} average={p1.averageToday} onStart={onStartTeil1} icon={FileText}/>
-      <Card number="2" title="Briefe" text="Bearbeiten Sie eine A1-Schreibaufgabe mit drei Punkten und schreiben Sie Ihre Nachricht." total={80} progress={Math.min(p2.progress.totalCompleted,80)} today={p2.progress.dailyCompleted} average={p2.averageToday} onStart={onStartTeil2} icon={PenLine} onSecrets={() => setSecretsOpen(true)}/>
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><div className="flex items-center gap-2 text-sm font-semibold text-slate-800"><BarChart3 className="h-4 w-4 text-amber-700"/>Statistik wird automatisch gespeichert.</div><p className="mt-1 text-xs text-slate-500">Gesamtfortschritt bleibt erhalten; Tageswerte beginnen am nächsten Tag neu.</p></div>
+    <div className="schreiben-home animate-fade-in">
+      <div className="schreiben-heading">
+        <div className="schreiben-heading-icon"><PenLine className="h-5 w-5" /></div>
+        <div><span>Goethe-Zertifikat A1</span><h1>Schreiben</h1></div>
+        <button type="button" onClick={() => setShowRussian(!showRussian)} className="schreiben-translate-button" aria-label="Показать перевод"><Eye className="h-4 w-4" /> Русский</button>
+      </div>
+
+      <section className="schreiben-intro">
+        <div className="schreiben-intro-top"><h2>Schreiben — письменная часть</h2><Eye className="h-4 w-4" /></div>
+        <p>Модуль состоит из двух частей: в Teil 1 вы заполняете формуляры, в Teil 2 пишете короткие письма и сообщения. В обоих разделах важно внимательно понять ситуацию и выполнить все требуемые пункты.</p>
+        {showRussian && <div className="schreiben-russian-box">Русский перевод: Письменная часть экзамена состоит из двух частей. Сначала вы переносите нужные сведения в формуляр, затем пишете короткое сообщение или письмо. Здесь можно тренироваться, видеть результат и сохранять статистику.</div>}
+      </section>
+
+      <Card title="Formulare" text="Прочитайте ситуацию и перенесите пять важных сведений в формуляр. После каждого задания Отто покажет результат." total={30} progress={Math.min(p1.progress.totalCompleted, 30)} today={p1.progress.dailyCompleted} average={p1.averageToday} onStart={onStartTeil1} icon={FileText} />
+      <Card title="Briefe" text="Выполните задание из трёх пунктов и напишите короткое сообщение или письмо примерно на 30 слов." total={80} progress={Math.min(p2.progress.totalCompleted, 80)} today={p2.progress.dailyCompleted} average={p2.averageToday} onStart={onStartTeil2} icon={PenLine} onSecrets={() => setSecretsOpen(true)} />
+
+      <section className="schreiben-stat-info">
+        <BarChart3 className="h-5 w-5" />
+        <div><strong>Статистика сохраняется автоматически</strong><p>Для Teil 1 и Teil 2 сохраняются: общее количество выполненных заданий, количество выполненных сегодня, средний балл за сегодня и общий прогресс. После перезагрузки данные остаются на устройстве.</p></div>
+      </section>
+
       <SchreibenSecrets open={secretsOpen} onClose={() => setSecretsOpen(false)} />
     </div>
   );
