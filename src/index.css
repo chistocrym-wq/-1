@@ -25,18 +25,19 @@
 .otto-language-option { width:100%; min-height:38px; display:flex; align-items:center; justify-content:space-between; padding:0 9px; border:0; border-radius:9px; background:transparent; color:#475569; font-size:12px; text-align:left; }
 .otto-language-option:hover,.otto-language-option.is-active { background:#f3f5f7; color:var(--otto-blue); }
 
-.otto-hero { position:relative; min-height:310px; overflow:hidden; display:flex; align-items:center; justify-content:space-between; gap:24px; padding:30px 38px 25px; border:1px solid #ded8cc; border-radius:28px; background:linear-gradient(118deg,#fbf8f0 0%,#f5eee1 58%,#e9eef0 100%); box-shadow:0 16px 42px rgba(35,51,68,.09),inset 0 1px 0 rgba(255,255,255,.9); }
-.otto-hero-glow { position:absolute; width:350px; height:350px; right:80px; top:-175px; border-radius:50%; background:rgba(255,255,255,.58); filter:blur(8px); }
+/* Main Otto banner — keep the recognizable turquoise color from the reference */
+.otto-hero { position:relative; min-height:310px; overflow:hidden; display:flex; align-items:center; justify-content:space-between; gap:24px; padding:30px 38px 25px; border:1px solid #0d8179; border-radius:28px; background:#118d84; box-shadow:0 16px 42px rgba(35,51,68,.12),inset 0 1px 0 rgba(255,255,255,.16); }
+.otto-hero-glow { position:absolute; width:350px; height:350px; right:80px; top:-175px; border-radius:50%; background:rgba(255,255,255,.08); filter:blur(8px); }
 .otto-hero-copy { position:relative; z-index:1; max-width:600px; }
-.otto-eyebrow { display:inline-flex; align-items:center; gap:6px; padding:6px 11px; border:1px solid #e6d6aa; border-radius:999px; background:rgba(255,255,255,.6); color:#80672d; font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
-.otto-hero h1 { margin:15px 0 9px; color:var(--otto-ink); font-size:clamp(32px,5vw,48px); line-height:1.02; font-weight:850; letter-spacing:-.045em; }
-.otto-hero p { max-width:560px; margin:0; color:#526174; font-size:16px; line-height:1.48; }
+.otto-eyebrow { display:inline-flex; align-items:center; gap:6px; padding:6px 11px; border:1px solid rgba(255,255,255,.22); border-radius:999px; background:rgba(255,255,255,.10); color:#e9fffb; font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+.otto-hero h1 { margin:15px 0 9px; color:#fff; font-size:clamp(32px,5vw,48px); line-height:1.02; font-weight:850; letter-spacing:-.045em; }
+.otto-hero p { max-width:560px; margin:0; color:rgba(255,255,255,.86); font-size:16px; line-height:1.48; }
 .otto-character-wrap { position:relative; z-index:1; width:285px; min-width:250px; align-self:stretch; display:flex; align-items:center; justify-content:center; padding-bottom:30px; }
-.otto-character-ring { position:absolute; width:235px; height:235px; border-radius:50%; background:radial-gradient(circle at 35% 30%,#fff 0,#eee5d4 65%,#e2d5bc 100%); box-shadow:0 14px 32px rgba(83,65,32,.1); }
-.otto-character { position:relative; z-index:2; width:245px; height:245px; object-fit:contain; filter:drop-shadow(0 13px 17px rgba(30,41,59,.14)); }
+.otto-character-ring { position:absolute; width:235px; height:235px; border-radius:50%; background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.30) 0,rgba(255,255,255,.14) 65%,rgba(255,255,255,.06) 100%); box-shadow:0 14px 32px rgba(0,47,44,.12); }
+.otto-character { position:relative; z-index:2; width:245px; height:245px; object-fit:contain; filter:drop-shadow(0 13px 17px rgba(0,40,38,.20)); }
 .otto-character-label { position:absolute; z-index:3; right:4px; bottom:0; display:flex; flex-direction:column; align-items:flex-start; gap:1px; padding:0; border:0; border-radius:0; background:transparent; box-shadow:none; text-align:left; }
-.otto-character-label strong { color:var(--otto-ink); font-size:12px; line-height:1.2; }
-.otto-character-label span { color:#718096; font-size:9px; line-height:1.2; }
+.otto-character-label strong { color:#fff; font-size:12px; line-height:1.2; }
+.otto-character-label span { color:rgba(255,255,255,.72); font-size:9px; line-height:1.2; }
 
 .otto-section { margin-top:25px; }
 .otto-section-heading { display:flex; align-items:end; justify-content:space-between; gap:12px; margin:0 3px 11px; }
@@ -51,16 +52,21 @@
 .otto-quick-card small { display:block; margin-top:3px; color:#7a8795; font-size:10px; line-height:1.3; }
 .otto-card-arrow { width:16px; height:16px; flex:0 0 auto; color:#94a3b8; }
 
+/* Exam modules — left aligned, icon first, with soft individual colors */
 .otto-module-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
-.otto-module-card { min-width:0; min-height:174px; display:flex; flex-direction:column; align-items:center; padding:18px; border:1px solid #e2e7eb; border-radius:19px; background:#fff; text-align:center; box-shadow:0 7px 24px rgba(30,41,59,.055); transition:.2s ease; }
+.otto-module-card { min-width:0; min-height:174px; display:flex; flex-direction:column; align-items:stretch; padding:18px; border:1px solid #e2e7eb; border-radius:19px; background:#fff; text-align:left; box-shadow:0 7px 24px rgba(30,41,59,.055); transition:.2s ease; }
 .otto-module-card:hover { transform:translateY(-2px); box-shadow:0 14px 32px rgba(30,41,59,.09); }
-.otto-module-head { width:100%; display:flex; flex-direction:column; align-items:center; gap:8px; }
-.otto-module-icon { width:48px; height:48px; display:grid; place-items:center; border-radius:14px; background:#f3f1eb; color:#80672d; }
+.otto-module-head { width:100%; display:flex; align-items:center; justify-content:flex-start; gap:11px; }
+.otto-module-icon { width:48px; height:48px; flex:0 0 48px; display:grid; place-items:center; border-radius:14px; }
+.otto-module-card:nth-child(1) .otto-module-icon { background:#fff7df; color:#c49328; }
+.otto-module-card:nth-child(2) .otto-module-icon { background:#fff0f3; color:#e25c78; }
+.otto-module-card:nth-child(3) .otto-module-icon { background:#eafaf7; color:#2ba79a; }
+.otto-module-card:nth-child(4) .otto-module-icon { background:#edf7ff; color:#3d9bd3; }
 .otto-module-card strong { display:block; color:var(--otto-ink); font-size:19px; line-height:1.05; font-weight:800; }
 .otto-module-card small { display:block; margin-top:3px; color:#738195; font-size:11px; line-height:1.25; font-weight:650; }
-.otto-module-card p { margin:10px auto 8px; max-width:360px; color:#617083; font-size:12px; line-height:1.4; }
-.otto-completed { margin:0; padding:4px 8px; border-radius:999px; background:#eaf6ee; color:#27804b; font-size:9px; font-weight:800; }
-.otto-module-meta { display:flex; justify-content:center; gap:12px; margin-bottom:7px; color:#98a2af; font-size:9px; font-weight:650; }
+.otto-module-card p { margin:12px 0 8px; max-width:360px; color:#617083; font-size:12px; line-height:1.4; }
+.otto-completed { margin:0 0 0 auto; padding:4px 8px; border-radius:999px; background:#eaf6ee; color:#27804b; font-size:9px; font-weight:800; }
+.otto-module-meta { display:flex; justify-content:flex-start; gap:12px; margin-bottom:7px; color:#98a2af; font-size:9px; font-weight:650; }
 .otto-module-bottom { width:100%; display:flex; align-items:center; gap:8px; margin-top:auto; }
 .otto-module-bottom > div { flex:1; }
 .otto-module-arrow { width:17px; height:17px; color:#9aa7b4; }
@@ -121,6 +127,7 @@
   .otto-quick-grid,.otto-module-grid { grid-template-columns:1fr; }
   .otto-quick-card { min-height:72px; }
   .otto-module-card { min-height:0; }
+  .otto-module-head { align-items:center; }
   .schreiben-heading { margin-bottom:13px; }
   .schreiben-heading h1 { font-size:22px; }
   .schreiben-intro { padding:14px; }
