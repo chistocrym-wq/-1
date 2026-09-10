@@ -1,14 +1,18 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { ArrowLeft, CheckCircle2, Trophy, RotateCcw, Mic, Square, Eye, Clock, Play, Send, Loader2, AlertCircle, Volume2, X } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Trophy, RotateCcw, Mic, Square, Eye, Clock, Send, Loader2, AlertCircle, Volume2, X } from 'lucide-react';
 import { speakingTasks } from '@/data/speaking';
 import { blobToWav } from '@/lib/audio';
 import { cn } from '@/lib/utils';
 
 interface SpeakingModuleProps { onBack: () => void; onComplete: (score: number, total: number) => void; }
 interface SpeakingResult {
-  transcription: string; contentScore: number; languageScore: number; overallScore: number;
-  covered: string[]; missing: string[];
-  corrections: Array<{ original: string; corrected: string; explanation: string }>;
+  transcription: string;
+  contentScore: number;
+  overallScore: number;
+  pointResults: Array<{ point: string; status: 'full' | 'partial' | 'missing'; evidence: string }>;
+  covered: string[];
+  partial: string[];
+  missing: string[];
   feedback: string;
   pronunciation: { confidence: number | null; level: 'good' | 'attention' | 'low' | 'unknown'; title: string; note: string };
   duration: number | null;
@@ -27,8 +31,10 @@ export function SpeakingModule({ onBack, onComplete }: SpeakingModuleProps) {
 
   const handleNext = () => {
     if (currentTask < speakingTasks.length - 1) {
-      setCurrentTask((v) => v + 1); setSelectedPrompt(0); setShowSample(false);
-    } else { onComplete(practiced.filter(Boolean).length, speakingTasks.length); setFinished(true); }
+      setCurrentTask((value) => value + 1); setSelectedPrompt(0); setShowSample(false);
+    } else {
+      onComplete(practiced.filter(Boolean).length, speakingTasks.length); setFinished(true);
+    }
   };
   const handleRetry = () => {
     setCurrentTask(0); setSelectedPrompt(0); setShowSample(false); setFinished(false);
@@ -36,8 +42,8 @@ export function SpeakingModule({ onBack, onComplete }: SpeakingModuleProps) {
   };
 
   if (finished) {
-    const completed = scores.filter((score, index) => practiced[index] && score > 0);
-    const average = completed.length ? Math.round(completed.reduce((a, b) => a + b, 0) / completed.length) : 0;
+    const completedScores = scores.filter((score, index) => practiced[index] && score >= 0);
+    const average = completedScores.length ? Math.round(completedScores.reduce((a, b) => a + b, 0) / completedScores.length) : 0;
     return <div className="animate-scale-in flex flex-col items-center justify-center py-12">
       <div className="flex items-center justify-center w-20 h-20 rounded-full bg-rose-50 mb-6"><Trophy className="w-10 h-10 text-rose-700" /></div>
       <h2 className="text-2xl font-bold text-slate-900 mb-2">Модуль завершён!</h2>
@@ -71,15 +77,27 @@ export function SpeakingModule({ onBack, onComplete }: SpeakingModuleProps) {
 }
 
 function SpeakingRecorder({ task, points, onChecked }: { task: string; points: string[]; onChecked: (score: number) => void }) {
-  const [isRecording, setIsRecording] = useState(false); const [elapsed, setElapsed] = useState(0); const [audioBlob, setAudioBlob] = useState<Blob | null>(null); const [audioUrl, setAudioUrl] = useState<string | null>(null); const [isChecking, setIsChecking] = useState(false); const [result, setResult] = useState<SpeakingResult | null>(null); const [error, setError] = useState('');
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null); const chunksRef = useRef<Blob[]>([]); const timerRef = useRef<ReturnType<typeof setInterval> | null>(null); const streamRef = useRef<MediaStream | null>(null); const stopRecordingRef = useRef<() => void>(() => undefined);
+  const [isRecording, setIsRecording] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [isChecking, setIsChecking] = useState(false);
+  const [result, setResult] = useState<SpeakingResult | null>(null);
+  const [error, setError] = useState('');
+  const [showTranscript, setShowTranscript] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const stopRecordingRef = useRef<() => void>(() => undefined);
+
   const stopTimer = useCallback(() => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } }, []);
   const stopRecording = useCallback(() => { stopTimer(); setIsRecording(false); if (mediaRecorderRef.current?.state !== 'inactive') mediaRecorderRef.current?.stop(); }, [stopTimer]);
   stopRecordingRef.current = stopRecording;
   useEffect(() => () => { stopTimer(); streamRef.current?.getTracks().forEach((t) => t.stop()); if (audioUrl) URL.revokeObjectURL(audioUrl); }, [audioUrl, stopTimer]);
 
   const startRecording = useCallback(async () => {
-    setError(''); setResult(null); setAudioBlob(null); if (audioUrl) URL.revokeObjectURL(audioUrl); setAudioUrl(null);
+    setError(''); setResult(null); setShowTranscript(false); setAudioBlob(null); if (audioUrl) URL.revokeObjectURL(audioUrl); setAudioUrl(null);
     if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) { setError('Этот браузер не поддерживает запись с микрофона. Попробуйте Chrome, Safari или Edge.'); return; }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); streamRef.current = stream;
@@ -93,19 +111,17 @@ function SpeakingRecorder({ task, points, onChecked }: { task: string; points: s
     } catch (err) { console.error(err); setError('Не удалось получить доступ к микрофону. Разрешите микрофон для сайта и попробуйте ещё раз.'); }
   }, [audioUrl]);
 
-  const resetRecording = () => { stopTimer(); if (mediaRecorderRef.current?.state !== 'inactive') mediaRecorderRef.current?.stop(); streamRef.current?.getTracks().forEach((t) => t.stop()); if (audioUrl) URL.revokeObjectURL(audioUrl); setAudioBlob(null); setAudioUrl(null); setResult(null); setError(''); setElapsed(0); setIsRecording(false); };
+  const resetRecording = () => { stopTimer(); if (mediaRecorderRef.current?.state !== 'inactive') mediaRecorderRef.current?.stop(); streamRef.current?.getTracks().forEach((t) => t.stop()); if (audioUrl) URL.revokeObjectURL(audioUrl); setAudioBlob(null); setAudioUrl(null); setResult(null); setShowTranscript(false); setError(''); setElapsed(0); setIsRecording(false); };
   const blobToDataUrl = (blob: Blob) => new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onloadend = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('Audio conversion failed')); reader.onerror = () => reject(reader.error || new Error('Audio conversion failed')); reader.readAsDataURL(blob); });
 
   const checkWithOtto = async () => {
     if (!audioBlob) return; setIsChecking(true); setError('');
     try {
-      // Android WebM/Opus can be playable in the browser but rejected by the API.
-      // Convert it in the browser to standard PCM WAV before uploading.
       const wavBlob = await blobToWav(audioBlob);
       const audioBase64 = await blobToDataUrl(wavBlob);
       const response = await fetch('/api/check-sprechen', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ task, points, audioBase64, mimeType: 'audio/wav', duration: elapsed }) });
       const data = await response.json(); if (!response.ok) throw new Error(data?.error || 'Не удалось проверить ответ.');
-      setResult(data as SpeakingResult); onChecked(Number(data.overallScore) || 0);
+      setResult(data as SpeakingResult); onChecked(Number(data.contentScore) || 0);
     } catch (err) { console.error(err); setError(err instanceof Error ? err.message : 'Ошибка проверки. Попробуйте ещё раз.'); } finally { setIsChecking(false); }
   };
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -113,16 +129,27 @@ function SpeakingRecorder({ task, points, onChecked }: { task: string; points: s
   return <div className="rounded-2xl border border-slate-200 bg-white p-5 mb-4">
     <div className="flex items-start justify-between gap-3 mb-4"><div><h4 className="font-semibold text-slate-900">🎙️ Ihre Antwort</h4><p className="text-sm text-slate-500 mt-1">Говорите по-немецки. Максимум {MAX_RECORDING_SECONDS} секунд.</p></div><span className="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">A1</span></div>
     <div className="flex flex-col sm:flex-row sm:items-center gap-4"><button onClick={isRecording ? stopRecording : startRecording} disabled={isChecking} aria-label={isRecording ? 'Остановить запись' : 'Начать запись'} className={cn('flex items-center justify-center w-16 h-16 rounded-full shrink-0', isRecording ? 'bg-rose-600 text-white animate-pulse' : 'bg-rose-50 text-rose-600 border-2 border-rose-200', isChecking && 'opacity-50 cursor-not-allowed')}>{isRecording ? <Square className="w-6 h-6" /> : <Mic className="w-7 h-7" />}</button><div className="flex-1"><div className="flex items-center gap-2"><Clock className="w-4 h-4 text-slate-400" /><span className="text-2xl font-bold text-slate-900 tabular-nums">{formatTime(elapsed)}</span><span className="text-xs text-slate-400">/ {formatTime(MAX_RECORDING_SECONDS)}</span></div><p className="text-sm text-slate-500 mt-0.5">{isRecording ? 'Идёт запись… нажмите ■, когда закончите.' : audioBlob ? 'Запись готова к проверке.' : 'Нажмите на микрофон и расскажите о себе.'}</p></div></div>
-    {audioUrl && !isRecording && <div className="mt-4 p-3 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center gap-3"><audio controls src={audioUrl} className="w-full min-w-0" /><button onClick={resetRecording} className="text-sm text-slate-500 whitespace-nowrap">Перезаписать</button></div>}
-    {error && <div className="mt-4 p-3 rounded-xl bg-red-50 border border-red-200 flex items-start gap-2 text-sm text-red-700"><AlertCircle className="w-4 h-4 shrink-0 mt-0.5" /><span>{error}</span></div>}
-    {audioBlob && !isRecording && !result && <button onClick={checkWithOtto} disabled={isChecking} className="mt-4 w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-rose-600 text-white font-semibold disabled:opacity-60">{isChecking ? <><Loader2 className="w-5 h-5 animate-spin" /> Otto проверяет ответ…</> : <><Send className="w-5 h-5" /> Отправить Отто на проверку</>}</button>}
-    {result && <div className="mt-5 space-y-4 animate-fade-in">
-      <div className="rounded-2xl bg-rose-50 border border-rose-200 p-4 flex items-center gap-4"><div className="w-16 h-16 rounded-full bg-white border-4 border-rose-200 flex items-center justify-center shrink-0"><span className="text-xl font-bold text-rose-700">{result.overallScore}</span></div><div><p className="font-bold text-slate-900">Тренировочный результат</p><p className="text-sm text-slate-600">Содержание {result.contentScore}/100 · Язык {result.languageScore}/100</p></div></div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3"><div className="rounded-xl border border-slate-200 p-4"><p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">Inhalt / Содержание</p><p className="text-sm text-slate-700">Названо: <strong>{result.covered.length}</strong></p>{result.missing.length ? <div className="mt-2 text-sm text-rose-700">Не хватает: {result.missing.join(', ')}</div> : <div className="mt-2 text-sm text-emerald-700">Все основные пункты выполнены.</div>}</div><div className="rounded-xl border border-slate-200 p-4"><p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">Aussprache / Понятность</p><div className="flex items-center gap-2"><Volume2 className="w-4 h-4 text-amber-600" /><p className="text-sm font-semibold text-slate-800">{result.pronunciation.title}</p></div><p className="text-xs text-slate-500 mt-1">{result.pronunciation.note}</p><p className="text-[11px] text-slate-400 mt-2">Это ориентир по уверенности распознавания, а не официальный фонетический балл.</p></div></div>
-      <div className="rounded-xl border border-slate-200 p-4"><p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">Otto hat gehört / Расшифровка</p><p className="text-sm leading-relaxed text-slate-700">{result.transcription}</p></div>
-      {result.corrections.length > 0 && <div className="rounded-xl border border-slate-200 p-4"><p className="font-semibold text-slate-900 mb-3">Что улучшить</p><div className="space-y-3">{result.corrections.map((c, i) => <div key={`${c.original}-${i}`} className="rounded-xl bg-slate-50 p-3"><p className="text-sm text-red-700"><strong>Было:</strong> {c.original}</p><p className="text-sm text-emerald-700 mt-1"><strong>Лучше:</strong> {c.corrected}</p><p className="text-xs text-slate-500 mt-1">{c.explanation}</p></div>)}</div></div>}
-      <div className="rounded-xl bg-slate-50 border border-slate-200 p-4"><p className="text-sm leading-relaxed text-slate-700">{result.feedback}</p></div><div className="flex items-center gap-2 text-xs text-slate-400"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Ответ проверен. Можно переходить к следующему заданию.</div>
+    {audioUrl && !isRecording && <div className="mt-4 p-3 rounded-xl bg-slate-50 border border-slate-200"><audio controls src={audioUrl} className="w-full" /><div className="flex flex-col sm:flex-row gap-2 mt-3"><button onClick={checkWithOtto} disabled={isChecking} className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-rose-600 text-white font-medium disabled:opacity-60">{isChecking ? <><Loader2 className="w-4 h-4 animate-spin" /> Otto проверяет…</> : <><Send className="w-4 h-4" /> Отправить Отто на проверку</>}</button><button onClick={resetRecording} disabled={isChecking} className="px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 font-medium">Записать заново</button></div></div>}
+    {error && <div className="mt-4 flex gap-2 items-start p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm"><AlertCircle className="w-4 h-4 shrink-0 mt-0.5" /><span>{error}</span></div>}
+
+    {result && <div className="mt-5 space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4"><p className="text-xs font-medium text-rose-700 mb-1">Выполнение шаблона / Aufgabe</p><p className="text-2xl font-bold text-slate-900">{result.contentScore}/100</p><p className="text-xs text-slate-600 mt-1">Каждый пункт проверен отдельно.</p></div>
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4"><div className="flex items-center gap-2 mb-1"><Volume2 className="w-4 h-4 text-slate-500" /><p className="text-xs font-medium text-slate-600">Произношение / понятность</p></div><p className="text-2xl font-bold text-slate-900">{result.pronunciation.confidence === null ? '—' : `${result.pronunciation.confidence}/100`}</p><p className="text-xs text-slate-600 mt-1">{result.pronunciation.title}</p></div>
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+        <div className="px-4 py-3 border-b border-slate-200"><h5 className="font-semibold text-slate-900">Все пункты шаблона</h5><p className="text-xs text-slate-500 mt-1">Отто проверяет именно то, что вы сказали вслух.</p></div>
+        {result.pointResults.map((item) => {
+          const isFull = item.status === 'full';
+          const isPartial = item.status === 'partial';
+          return <div key={item.point} className="px-4 py-3 border-b last:border-b-0 border-slate-100"><div className="flex items-start gap-3"><div className={cn('mt-0.5 shrink-0 w-5 h-5 rounded-full flex items-center justify-center', isFull ? 'bg-emerald-100 text-emerald-700' : isPartial ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700')}>{isFull ? <CheckCircle2 className="w-4 h-4" /> : isPartial ? <span className="text-xs font-bold">~</span> : <span className="text-xs font-bold">×</span>}</div><div className="min-w-0"><p className="font-medium text-slate-800">{item.point}</p><p className={cn('text-xs mt-1', isFull ? 'text-emerald-700' : isPartial ? 'text-amber-700' : 'text-red-700')}>{isFull ? 'Сказано' : isPartial ? 'Сказано не полностью' : 'Не сказано'}</p>{item.evidence && <p className="text-sm text-slate-600 mt-1">{item.evidence}</p>}</div></div></div>;
+        })}
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4"><p className="font-semibold text-slate-900">Произношение и понятность</p><p className="text-sm text-slate-600 mt-1">{result.pronunciation.note}</p><p className="text-xs text-slate-500 mt-2">Это ориентир по уверенности распознавания речи. Это не проверка написания слов.</p></div>
+      {result.feedback && <div className="rounded-xl border border-rose-200 bg-rose-50 p-4"><p className="font-semibold text-rose-800 mb-1">Otto</p><p className="text-sm text-slate-700 whitespace-pre-line">{result.feedback}</p></div>}
+      <div className="border-t border-slate-200 pt-3"><button onClick={() => setShowTranscript((value) => !value)} className="flex items-center gap-2 text-xs text-slate-500"><Eye className="w-4 h-4" /> {showTranscript ? 'Скрыть техническую расшифровку' : 'Показать техническую расшифровку'}</button>{showTranscript && <p className="mt-2 p-3 rounded-lg bg-slate-50 text-sm text-slate-600 leading-relaxed">{result.transcription}</p>}</div>
     </div>}
-    {!audioBlob && !isRecording && !error && <div className="mt-4 flex items-start gap-2 text-xs text-slate-400"><Play className="w-3.5 h-3.5 mt-0.5 shrink-0" /><span>Запись остаётся в браузере до отправки. AI вызывается только после нажатия «Отправить Отто».</span></div>}
   </div>;
 }
