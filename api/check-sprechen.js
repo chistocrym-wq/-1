@@ -125,9 +125,33 @@ function confidenceLabel(confidence) {
   };
 }
 
-function buildTranscriptionForm(audioBuffer, safeMime, extension, model, includeLogprobs = false) {
+function detectAudioContainer(buffer, suppliedMime) {
+  // Prefer the actual bytes over the browser-reported MIME. This prevents a
+  // WebM file from being uploaded to OpenAI with a misleading .wav filename.
+  if (buffer.length >= 12 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WAVE') {
+    return { mime: 'audio/wav', extension: 'wav' };
+  }
+  if (buffer.length >= 4 && buffer.toString('ascii', 0, 4) === 'OggS') {
+    return { mime: 'audio/ogg', extension: 'ogg' };
+  }
+  if (buffer.length >= 4 && buffer[0] === 0x1a && buffer[1] === 0x45 && buffer[2] === 0xdf && buffer[3] === 0xa3) {
+    return { mime: 'audio/webm', extension: 'webm' };
+  }
+  if (buffer.length >= 8 && buffer.toString('ascii', 4, 8) === 'ftyp') {
+    return { mime: suppliedMime?.includes('m4a') ? 'audio/m4a' : 'audio/mp4', extension: suppliedMime?.includes('m4a') ? 'm4a' : 'mp4' };
+  }
+  if (buffer.length >= 3 && buffer.toString('ascii', 0, 3) === 'ID3') {
+    return { mime: 'audio/mpeg', extension: 'mp3' };
+  }
+  // Last resort: trust the browser MIME, but keep it consistent with the name.
+  const mime = typeof suppliedMime === 'string' && suppliedMime.includes('/') ? suppliedMime.split(';')[0] : 'audio/webm';
+  const extension = mime.includes('mp4') ? 'mp4' : mime.includes('mpeg') || mime.includes('mpga') ? 'mp3' : mime.includes('wav') ? 'wav' : mime.includes('m4a') ? 'm4a' : mime.includes('ogg') ? 'ogg' : 'webm';
+  return { mime, extension };
+}
+
+function buildTranscriptionForm(audioBuffer, container, model, includeLogprobs = false) {
   const form = new FormData();
-  const file = new File([audioBuffer], `sprechen.${extension}`, { type: safeMime });
+  const file = new File([audioBuffer], `sprechen.${container.extension}`, { type: container.mime });
   form.append('file', file);
   form.append('model', model);
   form.append('language', 'de');
@@ -163,39 +187,20 @@ export default async function handler(req, res) {
     const audioBuffer = Buffer.from(rawBase64, 'base64');
     if (!audioBuffer.length) return send(res, 400, { error: 'Audio data is empty.' });
 
-    // Send the browser's original MediaRecorder file. Do not decode/re-encode it
-    // in the browser: on some phones that can create a WAV that plays locally
-    // but is rejected by the transcription API. Whisper is deliberately first
-    // because it is the most tolerant MVP path for WebM/Opus and is inexpensive.
-    const safeMime = typeof mimeType === 'string' && mimeType.includes('/')
-      ? mimeType.split(';')[0]
-      : 'audio/webm';
-    const extension = safeMime.includes('mp4')
-      ? 'mp4'
-      : safeMime.includes('mpeg') || safeMime.includes('mpga')
-        ? 'mp3'
-        : safeMime.includes('wav')
-          ? 'wav'
-          : safeMime.includes('m4a')
-            ? 'm4a'
-            : safeMime.includes('ogg')
-              ? 'ogg'
-              : 'webm';
+    const container = detectAudioContainer(audioBuffer, mimeType);
 
     let transcriptionData;
     let transcriptionResponse;
     let confidence = null;
 
     ({ response: transcriptionResponse, data: transcriptionData } = await transcribe(
-      buildTranscriptionForm(audioBuffer, safeMime, extension, TRANSCRIBE_MODEL, false)
+      buildTranscriptionForm(audioBuffer, container, TRANSCRIBE_MODEL, false)
     ));
 
-    // If Whisper rejects the browser file, retry the same bytes with the newer
-    // transcribe model. No client-side conversion is involved in either path.
     if (!transcriptionResponse.ok) {
       console.warn('Whisper transcription failed, retrying with gpt-4o-mini-transcribe:', transcriptionData?.error?.message);
       ({ response: transcriptionResponse, data: transcriptionData } = await transcribe(
-        buildTranscriptionForm(audioBuffer, safeMime, extension, FALLBACK_TRANSCRIBE_MODEL, true)
+        buildTranscriptionForm(audioBuffer, container, FALLBACK_TRANSCRIBE_MODEL, true)
       ));
       if (transcriptionResponse.ok) confidence = confidenceFromLogprobs(transcriptionData?.logprobs);
     }
