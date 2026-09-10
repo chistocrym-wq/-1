@@ -5,163 +5,40 @@
 @layer base {
   :root {
     --color-primary: 13 148 136;
+    --otto-ink: #10243f;
+    --otto-muted: #64748b;
+    --otto-blue: #183b63;
+    --otto-blue-dark: #102d4c;
+    --otto-gold: #d7aa4b;
+    --otto-cream: #f8f3e8;
+    --otto-line: #e7e2d8;
   }
 
+  html { background: #eef2f5; }
+
   body {
-    @apply bg-slate-50 text-slate-900 antialiased;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    @apply text-slate-900 antialiased;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     margin: 0;
     min-width: 320px;
     min-height: 100vh;
     min-height: var(--tg-viewport-stable-height, 100vh);
-    background: var(--tg-theme-bg-color, #f8fafc);
-    color: var(--tg-theme-text-color, #0f172a);
+    background: #eef2f5;
+    color: var(--otto-ink);
     overscroll-behavior-y: none;
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* ===== Otto: удобная типографика для телефона ===== */
-  body {
-    font-size: 17px;
-    line-height: 1.55;
-  }
-
-  p,
-  li,
-  label,
-  textarea,
-  input {
-    font-size: 17px;
-    line-height: 1.55;
-  }
+  p, li, label, textarea, input { font-size: 17px; line-height: 1.55; }
 
   button {
     font-size: 17px;
     line-height: 1.4;
     min-height: 48px;
   }
-}
 
-/* Текст заданий и вопросов */
-.otto-question-text,
-.otto-reading-text,
-.otto-exercise-text {
-  font-size: 18px;
-  line-height: 1.6;
-}
-
-/* Ответы и основные кнопки */
-.otto-answer-button,
-.otto-primary-button {
-  min-height: 52px;
-  font-size: 17px;
-  line-height: 1.4;
-}
-
-/* На телефоне делаем текст ещё немного крупнее */
-@media (max-width: 640px) {
-  body {
-    font-size: 18px;
-  }
-
-  p,
-  li,
-  label,
-  textarea,
-  input {
-    font-size: 18px;
-    line-height: 1.6;
-  }
-
-  button {
-    min-height: 52px;
-    font-size: 17px;
-  }
-
-  .otto-question-text,
-  .otto-reading-text,
-  .otto-exercise-text {
-    font-size: 19px;
-    line-height: 1.65;
-  }
-
-  .otto-answer-button,
-  .otto-primary-button {
-    min-height: 54px;
-    font-size: 17px;
-  }
-}
-
-@layer base {
-  button,
-  textarea {
-    font: inherit;
-  }
-
-  button {
-    touch-action: manipulation;
-  }
-}
-
-/*
- * Единый цвет тренажёра.
- * Dashboard (главный экран) не получает .trainer-blue, поэтому его оформление
- * остаётся без изменений. Внутри тренажёра старые amber/teal/rose CTA-кнопки
- * визуально приводятся к тому же sky-blue, что используется в Hören.
- */
-.trainer-blue button.bg-amber-600,
-.trainer-blue button.bg-teal-600,
-.trainer-blue button.bg-rose-600,
-.trainer-blue button.bg-amber-500,
-.trainer-blue button.bg-teal-500,
-.trainer-blue button.bg-rose-500 {
-  background-color: rgb(2 132 199) !important;
-  border-color: rgb(2 132 199) !important;
-  color: white !important;
-}
-
-.trainer-blue button.bg-amber-600:hover,
-.trainer-blue button.bg-teal-600:hover,
-.trainer-blue button.bg-rose-600:hover,
-.trainer-blue button.bg-amber-500:hover,
-.trainer-blue button.bg-teal-500:hover,
-.trainer-blue button.bg-rose-500:hover {
-  background-color: rgb(3 105 161) !important;
-  border-color: rgb(3 105 161) !important;
-}
-
-.trainer-blue button.bg-amber-50,
-.trainer-blue button.bg-teal-50,
-.trainer-blue button.bg-rose-50 {
-  background-color: rgb(240 249 255) !important;
-  border-color: rgb(186 230 253) !important;
-  color: rgb(3 105 161) !important;
-}
-
-.trainer-blue button.bg-amber-50:hover,
-.trainer-blue button.bg-teal-50:hover,
-.trainer-blue button.bg-rose-50:hover {
-  background-color: rgb(224 242 254) !important;
-  border-color: rgb(125 211 252) !important;
-  color: rgb(3 105 161) !important;
-}
-
-.trainer-blue button.text-amber-700,
-.trainer-blue button.text-teal-700,
-.trainer-blue button.text-rose-700,
-.trainer-blue button.text-amber-600,
-.trainer-blue button.text-teal-600,
-.trainer-blue button.text-rose-600 {
-  color: rgb(3 105 161) !important;
-}
-
-.trainer-blue button.border-amber-200,
-.trainer-blue button.border-teal-200,
-.trainer-blue button.border-rose-200,
-.trainer-blue button.border-amber-300,
-.trainer-blue button.border-teal-300,
-.trainer-blue button.border-rose-300 {
-  border-color: rgb(186 230 253) !important;
+  button, textarea { font: inherit; }
+  button { touch-action: manipulation; }
 }
 
 .telegram-app {
@@ -172,59 +49,381 @@
   padding-left: max(env(safe-area-inset-left), var(--tg-content-safe-area-inset-left, 0px));
 }
 
+/* Premium home */
+.otto-home {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 6px 0 34px;
+}
+
+.otto-topbar {
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.otto-brand { display: flex; align-items: center; gap: 11px; }
+.otto-brand-mark {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: #fff;
+  background: var(--otto-blue);
+  box-shadow: 0 7px 18px rgba(16, 45, 76, .18);
+}
+.otto-brand-title { font-size: 18px; line-height: 1.1; font-weight: 800; letter-spacing: -.02em; color: var(--otto-ink); }
+.otto-brand-subtitle { margin-top: 3px; font-size: 10px; font-weight: 700; letter-spacing: .22em; color: #8190a1; }
+
+.otto-language-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--otto-line);
+  border-radius: 12px;
+  background: rgba(255,255,255,.82);
+  color: #334155;
+  font-size: 13px;
+  font-weight: 650;
+  box-shadow: 0 5px 18px rgba(15,23,42,.05);
+  transition: .2s ease;
+}
+.otto-language-button:hover { border-color: #cbd5e1; background: #fff; transform: translateY(-1px); }
+.otto-language-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 50;
+  width: 220px;
+  overflow: hidden;
+  padding: 6px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: rgba(255,255,255,.98);
+  box-shadow: 0 22px 50px rgba(15,23,42,.15);
+}
+.otto-language-option {
+  width: 100%;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #475569;
+  font-size: 13px;
+  text-align: left;
+}
+.otto-language-option:hover, .otto-language-option.is-active { background: #f1f5f9; color: var(--otto-blue); }
+
+.otto-hero {
+  position: relative;
+  min-height: 330px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 26px;
+  padding: 34px 42px 30px;
+  border: 1px solid rgba(221,214,198,.9);
+  border-radius: 30px;
+  background: linear-gradient(118deg, #fbf8f0 0%, #f5eee1 58%, #e9eef0 100%);
+  box-shadow: 0 18px 50px rgba(35,51,68,.10), inset 0 1px 0 rgba(255,255,255,.9);
+}
+.otto-hero-glow {
+  position: absolute;
+  width: 370px;
+  height: 370px;
+  right: 100px;
+  top: -180px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.62);
+  filter: blur(8px);
+}
+.otto-hero-copy { position: relative; z-index: 1; max-width: 590px; }
+.otto-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border: 1px solid #e6d6aa;
+  border-radius: 999px;
+  background: rgba(255,255,255,.58);
+  color: #80672d;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+.otto-hero h1 {
+  margin: 17px 0 11px;
+  color: var(--otto-ink);
+  font-size: clamp(34px, 5vw, 50px);
+  line-height: 1.02;
+  font-weight: 850;
+  letter-spacing: -.045em;
+}
+.otto-hero p {
+  max-width: 570px;
+  margin: 0;
+  color: #526174;
+  font-size: 17px;
+  line-height: 1.6;
+}
+.otto-character-wrap {
+  position: relative;
+  z-index: 1;
+  width: 300px;
+  min-width: 260px;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.otto-character-ring {
+  position: absolute;
+  width: 248px;
+  height: 248px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff 0, #eee5d4 65%, #e2d5bc 100%);
+  box-shadow: 0 16px 35px rgba(83,65,32,.12);
+}
+.otto-character {
+  position: relative;
+  z-index: 2;
+  width: 255px;
+  height: 255px;
+  object-fit: contain;
+  object-position: center;
+  filter: drop-shadow(0 15px 18px rgba(30,41,59,.15));
+}
+.otto-character-label {
+  position: absolute;
+  z-index: 3;
+  bottom: 3px;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255,255,255,.9);
+  border-radius: 11px;
+  background: rgba(255,255,255,.88);
+  box-shadow: 0 8px 20px rgba(15,23,42,.10);
+  text-align: left;
+}
+.otto-character-label strong { color: var(--otto-ink); font-size: 12px; }
+.otto-character-label span { color: #718096; font-size: 9px; }
+
+.otto-section { margin-top: 29px; }
+.otto-section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 0 4px 13px;
+}
+.otto-section-kicker { display: block; margin-bottom: 3px; color: #9a7a32; font-size: 10px; font-weight: 850; letter-spacing: .18em; }
+.otto-section-heading h2 { margin: 0; color: var(--otto-ink); font-size: 24px; line-height: 1.15; font-weight: 800; letter-spacing: -.025em; }
+.otto-module-count { padding: 6px 10px; border-radius: 999px; background: #f3f0e8; color: #7c6a43; font-size: 11px; font-weight: 750; }
+
+.otto-quick-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.otto-quick-card {
+  min-height: 92px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 15px 16px;
+  border: 1px solid #e3e7ea;
+  border-radius: 18px;
+  background: rgba(255,255,255,.96);
+  color: var(--otto-ink);
+  text-align: left;
+  box-shadow: 0 8px 24px rgba(30,41,59,.055);
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.otto-quick-card:hover { transform: translateY(-2px); border-color: #d2dbe2; box-shadow: 0 14px 30px rgba(30,41,59,.09); }
+.otto-quick-icon {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: #f7f0df;
+  color: #8a6d2e;
+}
+.otto-quick-card strong { display: block; font-size: 14px; font-weight: 800; line-height: 1.25; }
+.otto-quick-card small { display: block; margin-top: 4px; color: #7a8795; font-size: 11px; line-height: 1.35; }
+.otto-card-arrow { width: 17px; height: 17px; flex: 0 0 auto; color: #94a3b8; transition: transform .2s ease; }
+.otto-quick-card:hover .otto-card-arrow { transform: translateX(3px); color: var(--otto-blue); }
+
+.otto-module-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.otto-module-card {
+  min-width: 0;
+  min-height: 190px;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  border: 1px solid #e2e7eb;
+  border-radius: 21px;
+  background: rgba(255,255,255,.98);
+  text-align: left;
+  box-shadow: 0 8px 28px rgba(30,41,59,.06);
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+.otto-module-card:hover { transform: translateY(-3px); border-color: #cfd9e0; box-shadow: 0 17px 38px rgba(30,41,59,.10); }
+.otto-module-head { display: flex; align-items: center; gap: 13px; min-width: 0; }
+.otto-module-icon {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 15px;
+  background: #edf3f7;
+  color: var(--otto-blue);
+}
+.otto-module-card strong { display: block; color: var(--otto-ink); font-size: 20px; line-height: 1.1; font-weight: 800; }
+.otto-module-card small { display: block; margin-top: 4px; color: #738195; font-size: 12px; font-weight: 650; }
+.otto-module-card p { margin: 16px 0 12px; color: #617083; font-size: 13px; line-height: 1.5; }
+.otto-completed { margin-left: auto; padding: 5px 8px; border-radius: 999px; background: #eaf6ee; color: #27804b; font-size: 10px; font-weight: 800; white-space: nowrap; }
+.otto-module-meta { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 8px; color: #98a2af; font-size: 10px; font-weight: 650; }
+.otto-module-bottom { display: flex; align-items: center; gap: 10px; margin-top: auto; }
+.otto-module-bottom > div { flex: 1; }
+.otto-module-arrow { width: 18px; height: 18px; flex: 0 0 auto; color: #9aa7b4; transition: transform .2s ease, color .2s ease; }
+.otto-module-card:hover .otto-module-arrow { transform: translateX(3px); color: var(--otto-blue); }
+
+/* Keep the trainer's existing blue action language */
+.trainer-blue button.bg-amber-600,
+.trainer-blue button.bg-teal-600,
+.trainer-blue button.bg-rose-600,
+.trainer-blue button.bg-amber-500,
+.trainer-blue button.bg-teal-500,
+.trainer-blue button.bg-rose-500 {
+  background-color: rgb(2 132 199) !important;
+  border-color: rgb(2 132 199) !important;
+  color: white !important;
+}
+.trainer-blue button.bg-amber-600:hover,
+.trainer-blue button.bg-teal-600:hover,
+.trainer-blue button.bg-rose-600:hover,
+.trainer-blue button.bg-amber-500:hover,
+.trainer-blue button.bg-teal-500:hover,
+.trainer-blue button.bg-rose-500:hover {
+  background-color: rgb(3 105 161) !important;
+  border-color: rgb(3 105 161) !important;
+}
+.trainer-blue button.bg-amber-50,
+.trainer-blue button.bg-teal-50,
+.trainer-blue button.bg-rose-50 {
+  background-color: rgb(240 249 255) !important;
+  border-color: rgb(186 230 253) !important;
+  color: rgb(3 105 161) !important;
+}
+.trainer-blue button.bg-amber-50:hover,
+.trainer-blue button.bg-teal-50:hover,
+.trainer-blue button.bg-rose-50:hover {
+  background-color: rgb(224 242 254) !important;
+  border-color: rgb(125 211 252) !important;
+  color: rgb(3 105 161) !important;
+}
+.trainer-blue button.text-amber-700,
+.trainer-blue button.text-teal-700,
+.trainer-blue button.text-rose-700,
+.trainer-blue button.text-amber-600,
+.trainer-blue button.text-teal-600,
+.trainer-blue button.text-rose-600 { color: rgb(3 105 161) !important; }
+.trainer-blue button.border-amber-200,
+.trainer-blue button.border-teal-200,
+.trainer-blue button.border-rose-200,
+.trainer-blue button.border-amber-300,
+.trainer-blue button.border-teal-300,
+.trainer-blue button.border-rose-300 { border-color: rgb(186 230 253) !important; }
+
+.otto-question-text, .otto-reading-text, .otto-exercise-text { font-size: 18px; line-height: 1.6; }
+.otto-answer-button, .otto-primary-button { min-height: 52px; font-size: 17px; line-height: 1.4; }
+
+@media (max-width: 800px) {
+  .otto-home { padding-top: 2px; }
+  .otto-hero { min-height: 0; padding: 27px 24px 20px; }
+  .otto-character-wrap { width: 225px; min-width: 225px; }
+  .otto-character, .otto-character-ring { width: 205px; height: 205px; }
+  .otto-character-label { right: -2px; bottom: 0; }
+}
+
+@media (max-width: 640px) {
+  body { font-size: 18px; }
+  p, li, label, textarea, input { font-size: 18px; line-height: 1.6; }
+  button { min-height: 52px; font-size: 17px; }
+  .otto-question-text, .otto-reading-text, .otto-exercise-text { font-size: 19px; line-height: 1.65; }
+  .otto-answer-button, .otto-primary-button { min-height: 54px; font-size: 17px; }
+
+  .telegram-app > .mx-auto { padding-left: 14px !important; padding-right: 14px !important; padding-top: 13px !important; }
+  .otto-home { padding-bottom: 22px; }
+  .otto-topbar { margin-bottom: 12px; }
+  .otto-brand-mark { width: 35px; height: 35px; border-radius: 11px; }
+  .otto-brand-title { font-size: 17px; }
+  .otto-brand-subtitle { font-size: 9px; }
+  .otto-language-button { min-height: 38px; padding: 0 9px; font-size: 12px; }
+  .otto-language-button span { max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .otto-hero { display: grid; grid-template-columns: minmax(0, 1fr) 132px; align-items: center; gap: 6px; padding: 22px 17px 17px; border-radius: 23px; }
+  .otto-eyebrow { padding: 6px 9px; font-size: 8px; letter-spacing: .045em; white-space: nowrap; }
+  .otto-hero h1 { margin: 12px 0 8px; font-size: 32px; line-height: 1.02; }
+  .otto-hero p { font-size: 13px; line-height: 1.48; }
+  .otto-hero-glow { width: 190px; height: 190px; right: -20px; top: -70px; }
+  .otto-character-wrap { width: 132px; min-width: 132px; height: 190px; }
+  .otto-character, .otto-character-ring { width: 138px; height: 138px; }
+  .otto-character-label { right: -1px; bottom: 0; max-width: 126px; padding: 6px 8px; border-radius: 9px; }
+  .otto-character-label strong { font-size: 9px; }
+  .otto-character-label span { font-size: 7px; }
+
+  .otto-section { margin-top: 23px; }
+  .otto-section-heading { margin-bottom: 10px; }
+  .otto-section-heading h2 { font-size: 21px; }
+  .otto-module-count { font-size: 9px; padding: 5px 8px; }
+  .otto-quick-grid { grid-template-columns: 1fr; gap: 9px; }
+  .otto-quick-card { min-height: 72px; padding: 11px 13px; border-radius: 15px; }
+  .otto-quick-icon { width: 40px; height: 40px; flex-basis: 40px; border-radius: 12px; }
+  .otto-quick-card strong { font-size: 13px; }
+  .otto-quick-card small { font-size: 10px; margin-top: 2px; }
+
+  .otto-module-grid { grid-template-columns: 1fr; gap: 10px; }
+  .otto-module-card { min-height: 156px; padding: 16px; border-radius: 17px; }
+  .otto-module-icon { width: 46px; height: 46px; flex-basis: 46px; border-radius: 13px; }
+  .otto-module-card strong { font-size: 18px; }
+  .otto-module-card small { font-size: 11px; }
+  .otto-module-card p { margin: 11px 0 9px; font-size: 12px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: .01ms !important;
   }
 }
 
 @layer utilities {
-  .animate-fade-in {
-    animation: fadeIn 0.4s ease-out;
-  }
-
-  .animate-slide-up {
-    animation: slideUp 0.5s ease-out;
-  }
-
-  .animate-scale-in {
-    animation: scaleIn 0.3s ease-out;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes scaleIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
-  }
+  .animate-fade-in { animation: fadeIn .4s ease-out; }
+  .animate-slide-up { animation: slideUp .5s ease-out; }
+  .animate-scale-in { animation: scaleIn .3s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes scaleIn { from { opacity: 0; transform: scale(.95); } to { opacity: 1; transform: scale(1); } }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  @apply bg-slate-100;
-}
-
-::-webkit-scrollbar-thumb {
-  @apply bg-slate-300 rounded-full;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-slate-400;
-}
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #eef2f5; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
