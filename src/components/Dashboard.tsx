@@ -33,7 +33,6 @@ export function Dashboard({ onSelectModule, onOpenInstructions, onOpenExamGuide,
     { onClick: onOpenExamGuide, icon: Award, title: t.examGuide, sub: t.examGuideSub },
     { onClick: onOpenMockExam, icon: FileCheck, title: t.mockExam, sub: t.mockExamSub },
   ];
-
   const modules = [
     { id: 'schreiben' as ModuleId, title: t.schreibenTitle, subtitle: t.schreibenSub, desc: t.schreibenDesc, icon: PenTool },
     { id: 'sprechen' as ModuleId, title: t.sprechenTitle, subtitle: t.sprechenSub, desc: t.sprechenDesc, icon: Mic },
@@ -51,32 +50,16 @@ export function Dashboard({ onSelectModule, onOpenInstructions, onOpenExamGuide,
             <div className="otto-brand-subtitle">{t.subtitle}</div>
           </div>
         </div>
-
         <div className="relative" ref={dropdownRef}>
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            aria-label="Выбрать язык"
-            className="otto-language-button"
-          >
-            <Globe className="h-4 w-4" />
-            <span>{currentLang.flag} {currentLang.label}</span>
-            <ChevronDown className={cn('h-3.5 w-3.5 transition-transform', isOpen && 'rotate-180')} />
+          <button onClick={() => setIsOpen(!isOpen)} aria-label="Выбрать язык" className="otto-language-button">
+            <Globe className="h-4 w-4" /><span>{currentLang.flag} {currentLang.label}</span><ChevronDown className={cn('h-3.5 w-3.5 transition-transform', isOpen && 'rotate-180')} />
           </button>
-          {isOpen && (
-            <div className="otto-language-menu animate-scale-in">
-              <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Язык интерфейса</div>
-              {languages.map((l) => (
-                <button
-                  key={l.id}
-                  onClick={() => { setLang(l.id); setIsOpen(false); }}
-                  className={cn('otto-language-option', lang === l.id && 'is-active')}
-                >
-                  <span className="flex items-center gap-2.5"><span className="text-base">{l.flag}</span><span>{l.label}</span></span>
-                  <span className="text-[10px] uppercase text-slate-400">{l.id}</span>
-                </button>
-              ))}
-            </div>
-          )}
+          {isOpen && <div className="otto-language-menu animate-scale-in">
+            <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Язык интерфейса</div>
+            {languages.map((l) => <button key={l.id} onClick={() => { setLang(l.id); setIsOpen(false); }} className={cn('otto-language-option', lang === l.id && 'is-active')}>
+              <span className="flex items-center gap-2.5"><span className="text-base">{l.flag}</span><span>{l.label}</span></span><span className="text-[10px] uppercase text-slate-400">{l.id}</span>
+            </button>)}
+          </div>}
         </div>
       </header>
 
@@ -98,66 +81,25 @@ export function Dashboard({ onSelectModule, onOpenInstructions, onOpenExamGuide,
       </section>
 
       <section className="otto-section">
-        <div className="otto-section-heading">
-          <div>
-            <span className="otto-section-kicker">START</span>
-            <h2>Начните с нужного раздела</h2>
-          </div>
-        </div>
+        <div className="otto-section-heading"><div><span className="otto-section-kicker">START</span><h2>Начните с нужного раздела</h2></div></div>
         <div className="otto-quick-grid">
-          {quickActions.map(({ onClick, icon: Icon, title, sub }) => (
-            <button key={title} onClick={onClick} className="otto-quick-card group">
-              <span className="otto-quick-icon"><Icon className="h-5 w-5" /></span>
-              <span className="min-w-0 flex-1">
-                <strong>{title}</strong>
-                <small>{sub}</small>
-              </span>
-              <ArrowRight className="otto-card-arrow" />
-            </button>
-          ))}
+          {quickActions.map(({ onClick, icon: Icon, title, sub }) => <button key={title} onClick={onClick} className="otto-quick-card group">
+            <span className="otto-quick-icon"><Icon className="h-5 w-5" /></span><span className="min-w-0 flex-1"><strong>{title}</strong><small>{sub}</small></span><ArrowRight className="otto-card-arrow" />
+          </button>)}
         </div>
       </section>
 
       <section className="otto-section otto-modules-section">
-        <div className="otto-section-heading">
-          <div>
-            <span className="otto-section-kicker">GOETHE A1</span>
-            <h2>Модули экзамена</h2>
-          </div>
-          <span className="otto-module-count">4 модуля</span>
-        </div>
-
+        <div className="otto-section-heading"><div><span className="otto-section-kicker">GOETHE A1</span><h2>Модули экзамена</h2></div><span className="otto-module-count">4 модуля</span></div>
         <div className="otto-module-grid">
           {modules.map(({ id, title, subtitle, desc, icon: Icon }, idx) => {
             const p = progress[id];
-            return (
-              <button
-                key={id}
-                onClick={() => onSelectModule(id)}
-                className="otto-module-card group animate-slide-up"
-                style={{ animationDelay: `${idx * 70}ms` }}
-              >
-                <div className="otto-module-head">
-                  <span className="otto-module-icon"><Icon className="h-6 w-6" /></span>
-                  <span className="min-w-0 flex-1 text-left">
-                    <strong>{title}</strong>
-                    <small>{subtitle}</small>
-                  </span>
-                  {p?.completed && <span className="otto-completed">{t.completed}</span>}
-                </div>
-                <p>{desc}</p>
-                {p && (
-                  <div className="otto-module-meta">
-                    <span>{t.best}: {p.bestScore}%</span>
-                    <span>{t.attempts}: {p.attempts}</span>
-                  </div>
-                )}
-                <div className="otto-module-bottom">
-                  <ProgressBar value={p?.completed ?? 0} max={1} />
-                  <ArrowRight className="otto-module-arrow" />
-                </div>
-              </button>
-            );
+            return <button key={id} onClick={() => onSelectModule(id)} className="otto-module-card group animate-slide-up" style={{ animationDelay: `${idx * 70}ms` }}>
+              <div className="otto-module-head"><span className="otto-module-icon"><Icon className="h-6 w-6" /></span><span className="min-w-0 flex-1 text-left"><strong>{title}</strong><small>{subtitle}</small></span>{p?.completed && <span className="otto-completed">{t.completed}</span>}</div>
+              <p>{desc}</p>
+              {p && <div className="otto-module-meta"><span>{t.best}: {p.bestScore}%</span><span>{t.attempts}: {p.attempts}</span></div>}
+              <div className="otto-module-bottom"><ProgressBar value={p?.completed ?? 0} max={1} /><ArrowRight className="otto-module-arrow" /></div>
+            </button>;
           })}
         </div>
       </section>
