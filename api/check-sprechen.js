@@ -1,4 +1,5 @@
 const TRANSCRIBE_MODEL = 'gpt-4o-mini-transcribe';
+const FALLBACK_TRANSCRIBE_MODEL = 'whisper-1';
 const EVALUATION_MODEL = 'gpt-4o-mini';
 const MAX_AUDIO_BASE64 = 4000000;
 const MAX_DURATION_SECONDS = 90;
@@ -108,6 +109,26 @@ function confidenceLabel(confidence) {
   return { level: 'low', title: 'Понятность стоит потренировать', note: 'Распознавание было неуверенным. Повторите ответ в тихом месте, чуть медленнее и чётче.' };
 }
 
+function buildTranscriptionForm(audioBuffer, safeMime, extension, model, includeLogprobs = false) {
+  const form = new FormData();
+  form.append('file', new Blob([audioBuffer], { type: safeMime }), `sprechen.${extension}`);
+  form.append('model', model);
+  form.append('language', 'de');
+  form.append('response_format', 'json');
+  if (includeLogprobs) form.append('include[]', 'logprobs');
+  return form;
+}
+
+async function transcribe(form) {
+  const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+    body: form
+  });
+  const data = await response.json();
+  return { response, data };
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return send(res, 405, { error: 'Method not allowed' });
   if (!process.env.OPENAI_API_KEY) return send(res, 500, { error: 'OPENAI_API_KEY is not configured on the server.' });
@@ -125,27 +146,38 @@ export default async function handler(req, res) {
     const audioBuffer = Buffer.from(rawBase64, 'base64');
     if (!audioBuffer.length) return send(res, 400, { error: 'Audio data is empty.' });
 
+    // MediaRecorder on Android/Chrome commonly produces WebM/Opus. The new
+    // transcription models are stricter about some WebM files, so try the
+    // cheap/current model first and transparently fall back to Whisper only
+    // when the file is rejected. This keeps the normal path inexpensive while
+    // preventing a valid browser recording from becoming a dead end.
     const safeMime = typeof mimeType === 'string' && mimeType.includes('/') ? mimeType.split(';')[0] : 'audio/webm';
-    const extension = safeMime.includes('mp4') ? 'mp4' : safeMime.includes('mpeg') ? 'mp3' : safeMime.includes('wav') ? 'wav' : 'webm';
-    const form = new FormData();
-    form.append('file', new Blob([audioBuffer], { type: safeMime }), `sprechen.${extension}`);
-    form.append('model', TRANSCRIBE_MODEL);
-    form.append('language', 'de');
-    form.append('response_format', 'json');
-    form.append('include[]', 'logprobs');
+    const extension = safeMime.includes('mp4') ? 'mp4' : safeMime.includes('mpeg') ? 'mp3' : safeMime.includes('wav') ? 'wav' : safeMime.includes('ogg') ? 'ogg' : 'webm';
 
-    const transcriptionResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
-      body: form
-    });
-    const transcriptionData = await transcriptionResponse.json();
-    if (!transcriptionResponse.ok) return send(res, transcriptionResponse.status, { error: `OpenAI transcription: ${transcriptionData?.error?.message || 'request failed'}` });
+    let transcriptionData;
+    let transcriptionResponse;
+    let confidence = null;
+
+    ({ response: transcriptionResponse, data: transcriptionData } = await transcribe(
+      buildTranscriptionForm(audioBuffer, safeMime, extension, TRANSCRIBE_MODEL, true)
+    ));
+
+    if (!transcriptionResponse.ok) {
+      console.warn('Primary transcription failed, retrying with whisper-1:', transcriptionData?.error?.message);
+      ({ response: transcriptionResponse, data: transcriptionData } = await transcribe(
+        buildTranscriptionForm(audioBuffer, safeMime, extension, FALLBACK_TRANSCRIBE_MODEL, false)
+      ));
+    } else {
+      confidence = confidenceFromLogprobs(transcriptionData?.logprobs);
+    }
+
+    if (!transcriptionResponse.ok) {
+      return send(res, transcriptionResponse.status, { error: `OpenAI transcription: ${transcriptionData?.error?.message || 'request failed'}` });
+    }
 
     const transcription = typeof transcriptionData?.text === 'string' ? transcriptionData.text.trim() : '';
     if (!transcription) return send(res, 422, { error: 'Речь не удалось распознать. Попробуйте записать ответ ещё раз, ближе к микрофону.' });
 
-    const confidence = confidenceFromLogprobs(transcriptionData?.logprobs);
     const clarity = confidenceLabel(confidence);
     const taskText = [
       'TASK:', String(task),
