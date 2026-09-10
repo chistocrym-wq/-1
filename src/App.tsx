@@ -5,7 +5,7 @@ import { ExamGuide } from '@/components/ExamGuide';
 import { MockExam } from '@/components/MockExam';
 import { ReadingModule } from '@/components/modules/ReadingModule';
 import { ListeningModule } from '@/components/modules/ListeningModule';
-import { SpeakingModule } from '@/components/modules/SpeakingModule';
+import { SpeakingModule } from '@/components/SpeakingModule';
 import { useProgress } from '@/hooks/useProgress';
 import { LesenHome } from '@/components/lesen/LesenHome';
 import { SchreibenHomeV2 } from '@/components/schreiben/SchreibenHomeV2';
@@ -25,34 +25,15 @@ export default function App() {
   const [schreibenScreen, setSchreibenScreen] = useState<SchreibenScreen>('home');
   const { progress, recordScore, markCompleted } = useProgress();
 
-  const handleBack = useCallback(() => {
-    setLesenScreen('home');
-    setSchreibenScreen('home');
-    setView(null);
-  }, []);
+  const handleBack = useCallback(() => { setLesenScreen('home'); setSchreibenScreen('home'); setView(null); }, []);
 
-  useEffect(() => {
-    const telegram = window.Telegram?.WebApp;
-    if (!telegram) return;
-    telegram.ready();
-    telegram.expand();
-  }, []);
+  useEffect(() => { const telegram = window.Telegram?.WebApp; if (!telegram) return; telegram.ready(); telegram.expand(); }, []);
+  useEffect(() => { const backButton = window.Telegram?.WebApp.BackButton; if (!backButton) return; if (view === null) { backButton.hide(); return; } backButton.show(); backButton.onClick(handleBack); return () => backButton.offClick(handleBack); }, [handleBack, view]);
 
-  useEffect(() => {
-    const backButton = window.Telegram?.WebApp.BackButton;
-    if (!backButton) return;
-    if (view === null) { backButton.hide(); return; }
-    backButton.show();
-    backButton.onClick(handleBack);
-    return () => backButton.offClick(handleBack);
-  }, [handleBack, view]);
+  const handleComplete = (mod: ModuleId) => (score: number, total: number) => { if (mod === 'sprechen') markCompleted(mod, total); else recordScore(mod, score, total); };
 
-  const handleComplete = (mod: ModuleId) => (score: number, total: number) => {
-    if (mod === 'sprechen') markCompleted(mod, total);
-    else recordScore(mod, score, total);
-  };
-
-  return <div className={`telegram-app min-h-screen ${view !== null ? 'trainer-blue' : ''}`}><div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10">
+  const shellClass = `telegram-app min-h-screen ${view !== null ? 'trainer-blue' : ''} ${view === 'schreiben' ? 'schreiben-shell' : ''}`;
+  return <div className={shellClass}><div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10">
     {view === null && <Dashboard onSelectModule={(mod) => { setView(mod); if (mod === 'schreiben') setSchreibenScreen('home'); }} onOpenInstructions={() => setView('instructions')} onOpenExamGuide={() => setView('exam-guide')} onOpenMockExam={() => setView('mock-exam')} progress={progress} />}
     {view === 'instructions' && <Instructions onBack={handleBack} />}
     {view === 'exam-guide' && <ExamGuide onBack={handleBack} />}
