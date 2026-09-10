@@ -73,9 +73,9 @@ export function Dashboard({ onSelectModule, onOpenInstructions, onOpenExamGuide,
         <div className="otto-character-wrap">
           <div className="otto-character-ring" aria-hidden="true" />
           <img src="/otto.png" alt="Отто — помощник для изучения немецкого" className="otto-character" />
-          <div className="otto-character-label">
-            <strong>{t.assistant}</strong>
-            <span>{t.assistantSub}</span>
+          <div className="otto-character-label !static !transform-none !items-center !text-center mt-1">
+            <strong className="font-extrabold text-[13px] leading-tight drop-shadow-sm">{t.assistant}</strong>
+            <span className="text-[10px] font-semibold leading-tight">{t.assistantSub}</span>
           </div>
         </div>
       </section>
